@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { Teacher } from "../database/models/Teacher";
 
 async function signup(req: Request, res: Response) {
   try {
@@ -24,18 +25,32 @@ async function signup(req: Request, res: Response) {
     if (existingUser) {
       res.status(400).json({ message: "User already exists." });
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await Account.create({
+    const newAccount = await Account.create({
       email,
       password: hashedPassword,
       role,
       state: STATE.INACTIVE,
       id: uuidv4(),
     });
+    console.log(role === ROLE.TEACHER);
 
-    res
-      .status(201)
-      .json({ message: "User registered successfully!", user: newUser });
+    // Check if the role is Teacher, then create a corresponding Teacher record
+    if (role === ROLE.TEACHER) {
+      console.log("first");
+
+      Teacher.create({
+        accountId: newAccount.id,
+        classList: [], // Initial empty array
+        assignmentsCreated: [], // Initial empty array
+      });
+    }
+
+    res.status(201).json({
+      message: "User registered successfully!",
+      user: newAccount,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error." });

@@ -5,10 +5,13 @@ class Class extends Model {
   declare id: string;
   declare name: string;
   declare description: string;
-  declare teacherId: string; // Reference to the Teacher
-  declare studentList: string[]; // Array of student IDs
-  declare assignments: string[]; // Array of assignment IDs
-  declare schedule: string; // Schedule information
+  declare teacherId: string;
+  declare studentList: string[];
+  declare assignments: string[];
+  declare schedule: string;
+  declare maxStudents: number;
+  declare startDate: Date;
+  declare endDate: Date;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -31,26 +34,38 @@ Class.init(
     },
     teacherId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
-        model: "Teacher", // Reference to Teacher model
+        model: "Teacher",
         key: "id",
       },
       onDelete: "SET NULL",
     },
     studentList: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
+      type: DataTypes.JSON,
       allowNull: true,
       defaultValue: [],
     },
     assignments: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
+      type: DataTypes.JSON,
       allowNull: true,
       defaultValue: [],
     },
     schedule: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    maxStudents: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    startDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    endDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,

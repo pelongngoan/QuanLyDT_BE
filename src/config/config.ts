@@ -32,8 +32,8 @@ export async function config(app: Router) {
 async function createDatabase() {
   await Account.sync({ alter: true });
   // await Student.sync({ alter: true });
-  // await Teacher.sync({ alter: true });
-  // await Class.sync({ alter: true });
+  await Teacher.sync({ alter: true });
+  await Class.sync({ alter: true });
   // await Assignment.sync({ alter: true });
   // await ActivityLog.sync({ alter: true });
   // await Attendance.sync({ alter: true });
