@@ -1,5 +1,5 @@
 import * as jwt from "jsonwebtoken";
-import { AccountSign } from "../type/index";
+import { AccountSign } from "../types/index";
 
 const JWT_SECRET =
   "e7a67e013369ba17e622af20aa523d116291245e41ce97d798723e8961118778";
