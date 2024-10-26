@@ -1,48 +1,40 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelizeConnection } from "../db";
+import { Survey } from "./Survey"; // Adjust import based on your structure
 
-class StudyMaterial extends Model {
+class SurveyResponse extends Model {
   declare id: string;
-  declare classId: string; // Reference to Class
-  declare title: string;
-  declare description: string;
-  declare link: string;
-  declare type: string;
+  declare surveyId: string; // Reference to Survey
+  declare userId: string; // User who submitted the response
+  declare answers: { questionId: string; answer: string }[]; // Array of answers
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
 
-StudyMaterial.init(
+SurveyResponse.init(
   {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    classId: {
+    surveyId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "Class",
+        model: "Surveys",
         key: "id",
       },
     },
-    title: {
-      type: DataTypes.STRING,
+    userId: {
+      type: DataTypes.UUID,
       allowNull: false,
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    link: {
-      type: DataTypes.STRING,
+    answers: {
+      type: DataTypes.ARRAY(DataTypes.JSONB), // Store question IDs with answers
       allowNull: false,
-    },
-    type: {
-      type: DataTypes.ENUM("LECTURE", "READING", "VIDEO"),
-      allowNull: false,
+      defaultValue: [],
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -57,10 +49,12 @@ StudyMaterial.init(
   },
   {
     sequelize: sequelizeConnection,
-    tableName: "StudyMaterial",
+    tableName: "SurveyResponses",
     timestamps: true,
     charset: "utf8",
   }
 );
 
-export { StudyMaterial };
+SurveyResponse.belongsTo(Survey, { foreignKey: "surveyId" });
+
+export { SurveyResponse };

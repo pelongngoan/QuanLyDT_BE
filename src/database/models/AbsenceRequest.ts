@@ -3,23 +3,29 @@ import { sequelizeConnection } from "../db";
 import { Class } from "./Class";
 import { Student } from "./Student";
 
-class AttendanceRecord extends Model {
+class AbsenceRequest extends Model {
   declare id: string;
+  declare userId: string;
   declare classId: string;
-  declare studentId: string;
   declare date: Date;
-  declare status: "PRESENT" | "ABSENT_WITH_LEAVE" | "ABSENT_WITHOUT_LEAVE";
-
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  declare reason: string;
+  declare status: "PENDING" | "APPROVED" | "DENIED";
 }
 
-AttendanceRecord.init(
+AbsenceRequest.init(
   {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: Student,
+        key: "id",
+      },
     },
     classId: {
       type: DataTypes.UUID,
@@ -29,37 +35,28 @@ AttendanceRecord.init(
         key: "id",
       },
     },
-    studentId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Student,
-        key: "id",
-      },
-    },
     date: {
       type: DataTypes.DATE,
       allowNull: false,
     },
-    status: {
-      type: DataTypes.ENUM(
-        "PRESENT",
-        "ABSENT_WITH_LEAVE",
-        "ABSENT_WITHOUT_LEAVE"
-      ),
+    reason: {
+      type: DataTypes.STRING,
       allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM("PENDING", "APPROVED", "DENIED"),
+      allowNull: false,
+      defaultValue: "PENDING",
     },
   },
   {
     sequelize: sequelizeConnection,
-    tableName: "AttendanceRecords",
+    tableName: "AbsenceRequests",
     timestamps: true,
   }
 );
 
-AttendanceRecord.belongsTo(Class, { foreignKey: "classId" });
-AttendanceRecord.belongsTo(Student, { foreignKey: "studentId" });
-Class.hasMany(AttendanceRecord, { foreignKey: "classId" });
-Student.hasMany(AttendanceRecord, { foreignKey: "studentId" });
+AbsenceRequest.belongsTo(Class, { foreignKey: "classId" });
+AbsenceRequest.belongsTo(Student, { foreignKey: "userId" });
 
-export { AttendanceRecord };
+export { AbsenceRequest };

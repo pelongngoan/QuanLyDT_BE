@@ -1,11 +1,13 @@
-import { DataTypes, Model } from "sequelize";
+// Notification model
+import { Model, DataTypes } from "sequelize";
 import { sequelizeConnection } from "../db";
+import { Account } from "./Account";
 
 class Notification extends Model {
   declare id: string;
-  declare recipientId: string; // Student or Teacher ID
-  declare content: string;
-  declare type: string;
+  declare userId: string;
+  declare title: string;
+  declare message: string;
   declare isRead: boolean;
 
   declare readonly createdAt: Date;
@@ -19,21 +21,20 @@ Notification.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    recipientId: {
+    userId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "Account", // Assume notifications are for accounts (teachers and students)
+        model: Account,
         key: "id",
       },
-      onDelete: "CASCADE",
     },
-    content: {
-      type: DataTypes.TEXT,
+    title: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    type: {
-      type: DataTypes.ENUM("GENERAL", "REMINDER", "ALERT"),
+    message: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     isRead: {
@@ -41,23 +42,49 @@ Notification.init(
       allowNull: false,
       defaultValue: false,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+  },
+  {
+    sequelize: sequelizeConnection,
+    tableName: "Notifications",
+    timestamps: true,
+  }
+);
+
+// Message model
+class Message extends Model {
+  declare id: string;
+  declare senderId: string;
+  declare receiverId: string;
+  declare content: string;
+
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
+}
+
+Message.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    updatedAt: {
-      type: DataTypes.DATE,
+    senderId: {
+      type: DataTypes.UUID,
       allowNull: false,
-      defaultValue: DataTypes.NOW,
+    },
+    receiverId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
   },
   {
     sequelize: sequelizeConnection,
-    tableName: "Notification",
+    tableName: "Messages",
     timestamps: true,
-    charset: "utf8",
   }
 );
-
-export { Notification };
+export { Notification, Message };

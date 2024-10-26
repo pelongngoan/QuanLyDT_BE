@@ -5,8 +5,8 @@ import { ROLE, STATE } from "../enum/enum";
 
 class Account extends Model {
   declare id: string;
-  // declare firstName: string;
-  // declare lastName: string;
+  declare firstName: string;
+  declare lastName: string;
   declare username: string;
   declare email: string;
   declare role: string;
@@ -27,14 +27,14 @@ Account.init(
       defaultValue: () => uuid(),
       primaryKey: true,
     },
-    // firstName: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    // lastName: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: true,
