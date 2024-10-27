@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
 import { Op } from "sequelize"; // Import Op
-import { Message, Notification } from "../database/models/Notification";
+import { Notification } from "../database/models/Notification";
 import { Account } from "../database/models/Account";
 import { sequelizeConnection } from "../database/db";
+import { Message } from "../database/models/Message";
 
 async function send_notification(req: Request, res: Response) {
   const { userIds, title, message } = req.body;
 
   if (!userIds || !title || !message) {
-    return res.status(400).json({ message: "Missing required fields." });
+    res.status(400).json({ message: "Missing required fields." });
+    return;
   }
 
   try {
@@ -32,7 +34,8 @@ async function get_notifications(req: Request, res: Response) {
   const { userId } = req.body;
 
   if (!userId) {
-    return res.status(400).json({ message: "User ID is required." });
+    res.status(400).json({ message: "User ID is required." });
+    return;
   }
 
   try {
@@ -52,14 +55,16 @@ async function mark_notification_as_read(req: Request, res: Response) {
   const { notificationId } = req.body;
 
   if (!notificationId) {
-    return res.status(400).json({ message: "Notification ID is required." });
+    res.status(400).json({ message: "Notification ID is required." });
+    return;
   }
 
   try {
     const notification = await Notification.findByPk(notificationId);
 
     if (!notification) {
-      return res.status(404).json({ message: "Notification not found." });
+      res.status(404).json({ message: "Notification not found." });
+      return;
     }
 
     await notification.update({ isRead: true });
@@ -74,7 +79,8 @@ async function get_conversation(req: Request, res: Response) {
   const { userId, otherUserId } = req.body;
 
   if (!userId || !otherUserId) {
-    return res.status(400).json({ message: "User IDs are required." });
+    res.status(400).json({ message: "User IDs are required." });
+    return;
   }
 
   try {
@@ -99,7 +105,8 @@ async function get_list_conversation(req: Request, res: Response) {
   const { userId } = req.body;
 
   if (!userId) {
-    return res.status(400).json({ message: "User ID is required." });
+    res.status(400).json({ message: "User ID is required." });
+    return;
   }
 
   try {
@@ -127,14 +134,16 @@ async function delete_message(req: Request, res: Response) {
   const { messageId } = req.body;
 
   if (!messageId) {
-    return res.status(400).json({ message: "Message ID is required." });
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
 
   try {
     const message = await Message.findByPk(messageId);
 
     if (!message) {
-      return res.status(404).json({ message: "Message not found." });
+      res.status(404).json({ message: "Message not found." });
+      return;
     }
 
     await message.destroy();
@@ -144,3 +153,11 @@ async function delete_message(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+export {
+  send_notification,
+  get_notifications,
+  mark_notification_as_read,
+  get_conversation,
+  get_list_conversation,
+  delete_message,
+};

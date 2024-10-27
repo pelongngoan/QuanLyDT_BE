@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { decode_access, decode_refresh, sign_access } from "../utils/jwt";
 import { AccountDecode, AccountSign } from "../types";
 import { Account } from "../database/models/Account";
-import { ROLE } from "../database/enum/enum";
+// import { ROLE } from "../database/enum/enum";
 
 async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {

@@ -3,7 +3,7 @@ import {
   request_absence,
   get_absence_requests,
   review_absence_request,
-} from "../controller/AbsenceRequest";
+} from "../controller/LeaveRequest";
 import { authenticate } from "../middleware/auth";
 
 export const absenceRequestRoutes = Router();

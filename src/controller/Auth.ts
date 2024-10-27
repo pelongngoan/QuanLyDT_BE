@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { Account } from "../database/models/Account";
-import { ROLE, STATE } from "../database/enum/enum";
+import { Account, ROLE, STATE } from "../database/models/Account";
+// import { ROLE, STATE } from "../database/enum/enum";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
@@ -31,7 +31,7 @@ async function signup(req: Request, res: Response) {
       email,
       password: hashedPassword,
       role,
-      state: STATE.INACTIVE,
+      state: STATE.LOCKED,
       id: uuidv4(),
     });
     console.log(role === ROLE.TEACHER);
@@ -82,7 +82,7 @@ async function login(req: Request, res: Response) {
     }
 
     const token = jwt.sign(
-      { id: account.id, username: account.username, role: account.role },
+      { id: account.id, role: account.role },
       process.env.SECRET_KEY!,
       { expiresIn: "1h" }
     );
@@ -97,7 +97,7 @@ async function login(req: Request, res: Response) {
     res.status(200).json({
       message: "Login successful!",
       id: account.id,
-      accountname: account.username,
+      // accountname: account.username,
       token,
       avatar: account.avatar,
       active: account.state === STATE.ACTIVE,
@@ -165,7 +165,7 @@ async function check_verify_code(req: Request, res: Response) {
     }
 
     // Update user status to active, if applicable, and return user details
-    if (user.state === STATE.INACTIVE) {
+    if (user.state === STATE.LOCKED) {
       console.log("first");
 
       await Account.update({ state: STATE.ACTIVE }, { where: { email } });
@@ -204,7 +204,7 @@ async function changeInfoAfterSignup(req: Request, res: Response) {
     }
 
     // Update user info
-    user.username = username;
+    // user.username = username;
     user.avatar = avatar;
     await user.save();
 
@@ -212,9 +212,9 @@ async function changeInfoAfterSignup(req: Request, res: Response) {
     return res.status(200).json({
       message: "Information updated successfully!",
       id: user.id,
-      username: user.username,
+      // username: user.username,
       email: user.email,
-      created: user.createdAt,
+      // created: user.createdAt,
       avatar: user.avatar,
     });
   } catch (error) {

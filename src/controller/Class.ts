@@ -70,8 +70,8 @@ async function edit_class(req: Request, res: Response) {
 
     // Update class fields
     await classToUpdate.update({
-      name: name || classToUpdate.name,
-      description: description || classToUpdate.description,
+      className: name || classToUpdate.className,
+      // description: description || classToUpdate.description,
       maxStudents: max_students || classToUpdate.maxStudents,
       startDate: start_date || classToUpdate.startDate,
       endDate: end_date || classToUpdate.endDate,

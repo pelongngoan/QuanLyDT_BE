@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Assignment } from "../database/models/Assignment";
-import { ROLE } from "../database/enum/enum";
 import { Submission } from "../database/models/Submission";
+import { ROLE } from "../database/models/Account";
 
 async function create_assignment(
   req: Request,
@@ -168,3 +168,10 @@ async function grade_assignment(
     next(error);
   }
 }
+export {
+  submit_assignment,
+  create_assignment,
+  delete_assignment,
+  edit_assignment,
+  grade_assignment,
+};

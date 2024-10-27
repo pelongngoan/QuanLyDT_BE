@@ -1,76 +1,55 @@
-import { Model, DataTypes } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
 import { sequelizeConnection } from "../db";
 
-import { Assignment } from "./Assignment";
-import { Student } from "./Student";
-
 export class Submission extends Model {
-  public id!: number;
-  public assignmentId!: number;
-  public studentId!: number;
-  public fileUrl!: string;
-  public submittedAt!: Date;
-  public grade?: number;
-  public gradedAt?: Date;
+  declare id: string;
+  declare studentId: string;
+  declare assignmentId: string;
+  declare fileUrl: string;
+  declare submittedAt: Date;
+
+  static associate(models: any) {
+    Submission.belongsTo(models.Student, {
+      foreignKey: "studentId",
+      onDelete: "CASCADE",
+    });
+    Submission.belongsTo(models.Assignment, {
+      foreignKey: "assignmentId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-// Khởi tạo mô hình
-Submission.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    assignmentId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: Assignment,
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Submission.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
-      onDelete: "CASCADE", // Xóa bài tập sẽ xóa tất cả các bài nộp liên quan
-    },
-    studentId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: Student,
-        key: "id",
+      studentId: {
+        type: DataTypes.UUID,
+        allowNull: false,
       },
-      onDelete: "CASCADE", // Xóa người dùng sẽ xóa tất cả các bài nộp liên quan
-    },
-    fileUrl: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isUrl: true,
+      assignmentId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      fileUrl: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      submittedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     },
-    submittedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    grade: {
-      type: DataTypes.INTEGER,
-      allowNull: true, // Không bắt buộc (giáo viên sẽ thêm sau khi chấm)
-      validate: {
-        min: 0,
-        max: 100,
-      },
-    },
-    gradedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "submissions",
-    timestamps: false,
-  }
-);
-
-Submission.belongsTo(Assignment, { foreignKey: "assignmentId" });
-Submission.belongsTo(Student, { foreignKey: "studentId" });
+    {
+      sequelize: sequelizeConnection,
+      modelName: "Submission",
+    }
+  );
+  return Submission;
+};

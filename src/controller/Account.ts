@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Account } from "../database/models/Account";
+import { Account, ROLE, STATE } from "../database/models/Account";
 import { Class } from "../database/models/Class";
-import { ROLE, STATE } from "../database/enum/enum";
+// import { ROLE, STATE } from "../database/enum/enum";
 
 async function get_user_info(req: Request, res: Response, next: NextFunction) {
   const userId = req.user?.id;
@@ -103,7 +103,7 @@ async function deactivate_user(
       return;
     }
 
-    await user.update({ state: STATE.INACTIVE });
+    await user.update({ state: STATE.LOCKED });
     res.status(200).json({ message: "User deactivated successfully!" });
   } catch (error) {
     next(error);
@@ -137,3 +137,11 @@ async function reactivate_user(
     next(error);
   }
 }
+export {
+  deactivate_user,
+  get_user_classes,
+  get_user_info,
+  reactivate_user,
+  set_user_info,
+  set_user_role,
+};

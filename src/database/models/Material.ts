@@ -1,53 +1,50 @@
-import { Model, DataTypes } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
 import { sequelizeConnection } from "../db";
-import { Class } from "./Class";
 
-class Material extends Model {
+export class Material extends Model {
   declare id: string;
-  declare classId: string;
   declare title: string;
-  declare description: string;
+  declare description: string | null;
   declare fileUrl: string;
+  declare classId: string;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Material.belongsTo(models.Class, {
+      foreignKey: "classId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-Material.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    classId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Class,
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Material.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      title: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      fileUrl: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      classId: {
+        type: DataTypes.UUID,
+        allowNull: false,
       },
     },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    description: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    fileUrl: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Materials",
-    timestamps: true,
-  }
-);
-
-Material.belongsTo(Class, { foreignKey: "classId" });
-
-export { Material };
+    {
+      sequelize: sequelizeConnection,
+      modelName: "Material",
+    }
+  );
+  return Material;
+};

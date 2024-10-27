@@ -1,0 +1,21 @@
+import { Router } from "express";
+import {
+  send_notification,
+  get_notifications,
+  mark_notification_as_read,
+  get_conversation,
+  get_list_conversation,
+  delete_message,
+} from "../controller/Notification";
+import { authenticate } from "../middleware/auth";
+
+const router = Router();
+
+router.post("/send", authenticate, send_notification);
+router.get("/get", authenticate, get_notifications);
+router.put("/mark_as_read", authenticate, mark_notification_as_read);
+router.get("/conversation", authenticate, get_conversation);
+router.get("/conversations", authenticate, get_list_conversation);
+router.delete("/delete_message", authenticate, delete_message);
+
+export default router;

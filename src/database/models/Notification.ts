@@ -1,90 +1,47 @@
-// Notification model
-import { Model, DataTypes } from "sequelize";
-import { sequelizeConnection } from "../db";
+import { DataTypes, Model, Sequelize } from "sequelize";
 import { Account } from "./Account";
+import { sequelizeConnection } from "../db";
 
-class Notification extends Model {
+export class Notification extends Model {
   declare id: string;
-  declare userId: string;
-  declare title: string;
   declare message: string;
+  declare type: string;
+  declare userId: string;
   declare isRead: boolean;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Notification.belongsTo(models.Account, {
+      foreignKey: "userId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-Notification.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Account,
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Notification.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
+      message: { type: DataTypes.STRING(255), allowNull: false },
+      type: { type: DataTypes.STRING(50), allowNull: true },
+      userId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Account,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    message: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    isRead: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Notifications",
-    timestamps: true,
-  }
-);
+    {
+      sequelize: sequelizeConnection,
 
-// Message model
-class Message extends Model {
-  declare id: string;
-  declare senderId: string;
-  declare receiverId: string;
-  declare content: string;
-
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
-}
-
-Message.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    senderId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    receiverId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Messages",
-    timestamps: true,
-  }
-);
-export { Notification, Message };
+      modelName: "Notification",
+    }
+  );
+  return Notification;
+};

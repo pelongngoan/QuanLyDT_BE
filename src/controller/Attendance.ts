@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AttendanceRecord } from "../database/models/Attendance";
+import { Attendance } from "../database/models/Attendance";
 
 async function take_attendance(req: Request, res: Response) {
   const { classId, studentId, status, date } = req.body;
@@ -10,7 +10,7 @@ async function take_attendance(req: Request, res: Response) {
   }
 
   try {
-    const attendanceRecord = await AttendanceRecord.create({
+    const attendanceRecord = await Attendance.create({
       classId,
       studentId,
       status,
@@ -35,7 +35,7 @@ async function get_attendance_record(req: Request, res: Response) {
   }
 
   try {
-    const attendanceRecord = await AttendanceRecord.findOne({
+    const attendanceRecord = await Attendance.findOne({
       where: { classId, studentId, date },
     });
 
@@ -59,7 +59,7 @@ async function set_attendance_status(req: Request, res: Response) {
   }
 
   try {
-    const attendanceRecord = await AttendanceRecord.findOne({
+    const attendanceRecord = await Attendance.findOne({
       where: { classId, studentId, date },
     });
 
@@ -68,7 +68,7 @@ async function set_attendance_status(req: Request, res: Response) {
       return;
     }
 
-    attendanceRecord.status = status;
+    attendanceRecord.isPresent = status;
     await attendanceRecord.save();
 
     res.status(200).json({
@@ -89,7 +89,7 @@ async function get_attendance_list(req: Request, res: Response) {
   }
 
   try {
-    const attendanceList = await AttendanceRecord.findAll({
+    const attendanceList = await Attendance.findAll({
       where: { classId, date },
     });
 
@@ -106,3 +106,9 @@ async function get_attendance_list(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+export {
+  get_attendance_list,
+  get_attendance_record,
+  set_attendance_status,
+  take_attendance,
+};

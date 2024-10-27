@@ -6,7 +6,8 @@ async function upload_material(req: Request, res: Response) {
   const { classId, title, description, fileUrl } = req.body;
 
   if (!classId || !title || !fileUrl) {
-    return res.status(400).json({ message: "Missing required fields." });
+    res.status(400).json({ message: "Missing required fields." });
+    return;
   }
 
   try {
@@ -29,14 +30,16 @@ async function edit_material(req: Request, res: Response) {
   const { materialId, title, description, fileUrl } = req.body;
 
   if (!materialId) {
-    return res.status(400).json({ message: "Material ID is required." });
+    res.status(400).json({ message: "Material ID is required." });
+    return;
   }
 
   try {
     const material = await Material.findByPk(materialId);
 
     if (!material) {
-      return res.status(404).json({ message: "Material not found." });
+      res.status(404).json({ message: "Material not found." });
+      return;
     }
 
     await material.update({
@@ -57,14 +60,16 @@ async function delete_material(req: Request, res: Response) {
   const { materialId } = req.body;
 
   if (!materialId) {
-    return res.status(400).json({ message: "Material ID is required." });
+    res.status(400).json({ message: "Material ID is required." });
+    return;
   }
 
   try {
     const material = await Material.findByPk(materialId);
 
     if (!material) {
-      return res.status(404).json({ message: "Material not found." });
+      res.status(404).json({ message: "Material not found." });
+      return;
     }
 
     await material.destroy();
@@ -78,14 +83,16 @@ async function get_material_info(req: Request, res: Response) {
   const { materialId } = req.body;
 
   if (!materialId) {
-    return res.status(400).json({ message: "Material ID is required." });
+    res.status(400).json({ message: "Material ID is required." });
+    return;
   }
 
   try {
     const material = await Material.findByPk(materialId);
 
     if (!material) {
-      return res.status(404).json({ message: "Material not found." });
+      res.status(404).json({ message: "Material not found." });
+      return;
     }
 
     res.status(200).json({ material });
@@ -98,7 +105,8 @@ async function get_material_list(req: Request, res: Response) {
   const { classId } = req.body;
 
   if (!classId) {
-    return res.status(400).json({ message: "Class ID is required." });
+    res.status(400).json({ message: "Class ID is required." });
+    return;
   }
 
   try {
@@ -109,3 +117,10 @@ async function get_material_list(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+export {
+  delete_material,
+  edit_material,
+  get_material_info,
+  get_material_list,
+  upload_material,
+};

@@ -1,72 +1,49 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
+import { Account } from "./Account";
 import { sequelizeConnection } from "../db";
-import { ATTENDANCESTATUS } from "../enum/enum";
 
-class Student extends Model {
+export class Student extends Model {
   declare id: string;
   declare accountId: string;
-  declare classList: string[]; // Array of class IDs
-  declare assignmentSubmissions: string[]; // Array of submitted assignment IDs
-  declare attendanceStatus: string; // Enum for attendance status
-  declare schedule: string; // A field to represent the student's schedule
+  declare major: string | null;
+  declare enrollmentYear: number;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Student.belongsTo(models.Account, {
+      foreignKey: "accountId",
+      onDelete: "CASCADE",
+    });
+    Student.belongsToMany(models.Class, {
+      through: "ClassStudents",
+      foreignKey: "studentId",
+    });
+  }
 }
 
-Student.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    accountId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "Account",
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Student.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
-      onDelete: "CASCADE",
+      accountId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Account,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      major: { type: DataTypes.STRING(100), allowNull: true },
+      enrollmentYear: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     },
-    classList: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: true,
-      defaultValue: [],
-    },
-    assignmentSubmissions: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: true,
-      defaultValue: [],
-    },
-    attendanceStatus: {
-      type: DataTypes.ENUM,
-      values: [ATTENDANCESTATUS.ABSENT, ATTENDANCESTATUS.PRESENT],
-      allowNull: false,
-      defaultValue: ATTENDANCESTATUS.PRESENT,
-    },
-    schedule: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Student",
-    timestamps: true,
-    charset: "utf8",
-  }
-);
+    {
+      sequelize: sequelizeConnection,
 
-export { Student };
+      modelName: "Student",
+    }
+  );
+  return Student;
+};

@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.assignmentRoutes = void 0;
+const express_1 = require("express");
+const Assignment_1 = require("../controller/Assignment");
+const auth_1 = require("../middleware/auth");
+exports.assignmentRoutes = (0, express_1.Router)();
+exports.assignmentRoutes.post("/submit_assignment,,", auth_1.authenticate, Assignment_1.submit_assignment);
+exports.assignmentRoutes.post("/create_assignment,,", auth_1.authenticate, Assignment_1.create_assignment);
+exports.assignmentRoutes.delete("/delete_assignment,,", auth_1.authenticate, Assignment_1.delete_assignment);
+exports.assignmentRoutes.post("/edit_assignment,,", auth_1.authenticate, Assignment_1.edit_assignment);
+exports.assignmentRoutes.post("/grade_assignment,,", auth_1.authenticate, Assignment_1.grade_assignment);

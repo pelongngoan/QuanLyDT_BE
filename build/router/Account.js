@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.accountRoutes = void 0;
+const express_1 = require("express");
+const Account_1 = require("../controller/Account");
+const auth_1 = require("../middleware/auth");
+exports.accountRoutes = (0, express_1.Router)();
+exports.accountRoutes.put("/deactivate_user,", auth_1.authenticate, Account_1.deactivate_user);
+exports.accountRoutes.get("/get_user_classes,", auth_1.authenticate, Account_1.get_user_classes);
+exports.accountRoutes.get("/get_user_info,", auth_1.authenticate, Account_1.get_user_info);
+exports.accountRoutes.put("/reactivate_user,", auth_1.authenticate, Account_1.reactivate_user);
+exports.accountRoutes.put("/set_user_info,", auth_1.authenticate, Account_1.set_user_info);
+exports.accountRoutes.put("/set_user_role,", auth_1.authenticate, Account_1.set_user_role);

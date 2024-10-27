@@ -1,4 +1,6 @@
-import { ROLE } from "../database/enum/enum";
+// import { ROLE } from "../database/enum/enum";
+
+import { ROLE } from "../database/models/Account";
 
 interface AccountSign {
   id: string;

@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.accountRoutes = void 0;
+const express_1 = require("express");
+const Material_1 = require("../controller/Material");
+const auth_1 = require("../middleware/auth");
+exports.accountRoutes = (0, express_1.Router)();
+exports.accountRoutes.delete("/delete_material", auth_1.authenticate, Material_1.delete_material);
+exports.accountRoutes.put("/edit_material", auth_1.authenticate, Material_1.edit_material);
+exports.accountRoutes.get("/get_material_inf", auth_1.authenticate, Material_1.get_material_info);
+exports.accountRoutes.get("/get_material_list", auth_1.authenticate, Material_1.get_material_list);
+exports.accountRoutes.post("/upload_material", auth_1.authenticate, Material_1.upload_material);

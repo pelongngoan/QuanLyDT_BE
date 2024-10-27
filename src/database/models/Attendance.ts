@@ -1,65 +1,60 @@
-import { Model, DataTypes } from "sequelize";
-import { sequelizeConnection } from "../db";
-import { Class } from "./Class";
+import { DataTypes, Model, Sequelize } from "sequelize";
 import { Student } from "./Student";
+import { Session } from "./Session";
+import { sequelizeConnection } from "../db";
 
-class AttendanceRecord extends Model {
+export class Attendance extends Model {
   declare id: string;
-  declare classId: string;
+  declare sessionId: string;
   declare studentId: string;
-  declare date: Date;
-  declare status: "PRESENT" | "ABSENT_WITH_LEAVE" | "ABSENT_WITHOUT_LEAVE";
+  declare isPresent: boolean;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Attendance.belongsTo(models.Session, {
+      foreignKey: "sessionId",
+      onDelete: "CASCADE",
+    });
+    Attendance.belongsTo(models.Student, {
+      foreignKey: "studentId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-AttendanceRecord.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    classId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Class,
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Attendance.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      sessionId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Session,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      studentId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Student,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      isPresent: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
       },
     },
-    studentId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Student,
-        key: "id",
-      },
-    },
-    date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    status: {
-      type: DataTypes.ENUM(
-        "PRESENT",
-        "ABSENT_WITH_LEAVE",
-        "ABSENT_WITHOUT_LEAVE"
-      ),
-      allowNull: false,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "AttendanceRecords",
-    timestamps: true,
-  }
-);
-
-AttendanceRecord.belongsTo(Class, { foreignKey: "classId" });
-AttendanceRecord.belongsTo(Student, { foreignKey: "studentId" });
-Class.hasMany(AttendanceRecord, { foreignKey: "classId" });
-Student.hasMany(AttendanceRecord, { foreignKey: "studentId" });
-
-export { AttendanceRecord };
+    {
+      sequelize: sequelizeConnection,
+      modelName: "Attendance",
+    }
+  );
+  return Attendance;
+};
