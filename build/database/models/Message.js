@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Message = void 0;
 const sequelize_1 = require("sequelize");
 const Account_1 = require("./Account");
-const db_1 = require("../db");
 class Message extends sequelize_1.Model {
     static associate(models) {
         Message.belongsTo(models.Account, {
@@ -45,7 +44,7 @@ exports.default = (sequelize) => {
         content: { type: sequelize_1.DataTypes.TEXT, allowNull: false },
         timestamp: { type: sequelize_1.DataTypes.DATE, defaultValue: sequelize_1.DataTypes.NOW },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "Message",
     });
     return Message;

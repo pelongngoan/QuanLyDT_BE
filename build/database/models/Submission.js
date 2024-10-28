@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Submission = void 0;
 const sequelize_1 = require("sequelize");
-const db_1 = require("../db");
 class Submission extends sequelize_1.Model {
     static associate(models) {
         Submission.belongsTo(models.Student, {
@@ -41,7 +40,7 @@ exports.default = (sequelize) => {
             defaultValue: sequelize_1.DataTypes.NOW,
         },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "Submission",
     });
     return Submission;

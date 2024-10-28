@@ -4,7 +4,6 @@ exports.Grade = void 0;
 const sequelize_1 = require("sequelize");
 const Student_1 = require("./Student");
 const Assignment_1 = require("./Assignment");
-const db_1 = require("../db");
 class Grade extends sequelize_1.Model {
     static associate(models) {
         Grade.belongsTo(models.Assignment, {
@@ -44,7 +43,7 @@ exports.default = (sequelize) => {
         grade: { type: sequelize_1.DataTypes.DECIMAL(5, 2), allowNull: true },
         comments: { type: sequelize_1.DataTypes.TEXT, allowNull: true },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "Grade",
     });
     return Grade;

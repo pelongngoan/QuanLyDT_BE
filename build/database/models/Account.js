@@ -63,3 +63,4 @@ exports.default = (sequelize) => {
     });
     return Account;
 };
+// export { Account };

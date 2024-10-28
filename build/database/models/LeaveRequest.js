@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LeaveRequest = void 0;
 const sequelize_1 = require("sequelize");
-const db_1 = require("../db");
 class LeaveRequest extends sequelize_1.Model {
     static associate(models) {
         LeaveRequest.belongsTo(models.Student, {
@@ -49,7 +48,7 @@ exports.default = (sequelize) => {
             defaultValue: "pending",
         },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "LeaveRequest",
     });
     return LeaveRequest;

@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Teacher = void 0;
 const sequelize_1 = require("sequelize");
 const Account_1 = require("./Account");
-const db_1 = require("../db");
 class Teacher extends sequelize_1.Model {
     static associate(models) {
         Teacher.belongsTo(models.Account, {
@@ -35,7 +34,7 @@ exports.default = (sequelize) => {
         specialization: { type: sequelize_1.DataTypes.STRING(100), allowNull: true },
         bio: { type: sequelize_1.DataTypes.TEXT, allowNull: true },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "Teacher",
     });
     return Teacher;

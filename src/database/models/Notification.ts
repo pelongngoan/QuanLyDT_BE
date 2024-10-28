@@ -38,7 +38,7 @@ export default (sequelize: Sequelize) => {
       isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
 
       modelName: "Notification",
     }

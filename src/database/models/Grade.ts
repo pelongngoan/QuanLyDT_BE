@@ -50,7 +50,7 @@ export default (sequelize: Sequelize) => {
       comments: { type: DataTypes.TEXT, allowNull: true },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
 
       modelName: "Grade",
     }

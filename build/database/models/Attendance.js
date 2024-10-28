@@ -4,7 +4,6 @@ exports.Attendance = void 0;
 const sequelize_1 = require("sequelize");
 const Student_1 = require("./Student");
 const Session_1 = require("./Session");
-const db_1 = require("../db");
 class Attendance extends sequelize_1.Model {
     static associate(models) {
         Attendance.belongsTo(models.Session, {
@@ -47,7 +46,7 @@ exports.default = (sequelize) => {
             defaultValue: true,
         },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "Attendance",
     });
     return Attendance;

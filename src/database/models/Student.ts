@@ -40,7 +40,7 @@ export default (sequelize: Sequelize) => {
       enrollmentYear: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
 
       modelName: "Student",
     }

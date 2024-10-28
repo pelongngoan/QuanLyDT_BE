@@ -40,7 +40,7 @@ export default (sequelize: Sequelize) => {
       bio: { type: DataTypes.TEXT, allowNull: true },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
 
       modelName: "Teacher",
     }

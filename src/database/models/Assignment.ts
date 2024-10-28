@@ -38,7 +38,7 @@ export default (sequelize: Sequelize) => {
       },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
       modelName: "Assignment",
     }
   );

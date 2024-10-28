@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Assignment = void 0;
 const sequelize_1 = require("sequelize");
 const Class_1 = require("./Class");
-const db_1 = require("../db");
 class Assignment extends sequelize_1.Model {
     static associate(models) {
         Assignment.belongsTo(models.Class, {
@@ -32,7 +31,7 @@ exports.default = (sequelize) => {
             allowNull: false,
         },
     }, {
-        sequelize: db_1.sequelizeConnection,
+        sequelize,
         modelName: "Assignment",
     });
     return Assignment;

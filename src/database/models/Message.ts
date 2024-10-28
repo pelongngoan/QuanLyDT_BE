@@ -51,7 +51,7 @@ export default (sequelize: Sequelize) => {
       timestamp: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
 
       modelName: "Message",
     }

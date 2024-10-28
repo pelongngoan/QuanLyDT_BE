@@ -76,3 +76,4 @@ export default (sequelize: Sequelize) => {
   );
   return Account;
 };
+// export { Account };

@@ -40,7 +40,7 @@ export default (sequelize: Sequelize) => {
       topic: { type: DataTypes.STRING(100), allowNull: true },
     },
     {
-      sequelize: sequelizeConnection,
+      sequelize,
 
       modelName: "Session",
     }
