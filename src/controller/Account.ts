@@ -1,13 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { Account, ROLE, STATE } from "../database/models/Account";
 import { Class } from "../database/models/Class";
-// import { ROLE, STATE } from "../database/enum/enum";
+import { Notification } from "../database/models/Notification";
+import { Message } from "../database/models/Message";
 
-async function get_user_info(req: Request, res: Response, next: NextFunction) {
+async function getUserInfo(req: Request, res: Response, next: NextFunction) {
   const userId = req.user?.id;
 
   try {
-    const user = await Account.findOne({ where: { id: userId } });
+    const user = await Account.findOne({
+      where: { id: userId },
+      include: [Notification, Message],
+    });
     if (!user) {
       res.status(404).json({ message: "User not found." });
       return;
@@ -19,7 +23,8 @@ async function get_user_info(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-async function set_user_info(req: Request, res: Response, next: NextFunction) {
+// Update user information
+async function setUserInfo(req: Request, res: Response, next: NextFunction) {
   const userId = req.user?.id;
   const { firstName, lastName, avatar } = req.body;
 
@@ -42,22 +47,22 @@ async function set_user_info(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-async function get_user_classes(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+// Retrieve classes for the user (teacher role)
+async function getUserClasses(req: Request, res: Response, next: NextFunction) {
   const userId = req.user?.id;
 
   try {
-    const classes = await Class.findAll({ where: { teacherId: userId } });
+    const classes = await Class.findAll({
+      where: { teacherId: userId },
+    });
     res.status(200).json({ classes });
   } catch (error) {
     next(error);
   }
 }
 
-async function set_user_role(req: Request, res: Response, next: NextFunction) {
+// Set user role (admin-only)
+async function setUserRole(req: Request, res: Response, next: NextFunction) {
   const adminRole = req.user?.role;
   const { userId, role } = req.body;
 
@@ -81,11 +86,9 @@ async function set_user_role(req: Request, res: Response, next: NextFunction) {
     next(error);
   }
 }
-async function deactivate_user(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+
+// Deactivate user (admin-only)
+async function deactivateUser(req: Request, res: Response, next: NextFunction) {
   const adminRole = req.user?.role;
   const { userId } = req.body;
 
@@ -109,11 +112,9 @@ async function deactivate_user(
     next(error);
   }
 }
-async function reactivate_user(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+
+// Reactivate user (admin-only)
+async function reactivateUser(req: Request, res: Response, next: NextFunction) {
   const adminRole = req.user?.role;
   const { userId } = req.body;
 
@@ -137,11 +138,12 @@ async function reactivate_user(
     next(error);
   }
 }
+
 export {
-  deactivate_user,
-  get_user_classes,
-  get_user_info,
-  reactivate_user,
-  set_user_info,
-  set_user_role,
+  getUserInfo,
+  setUserInfo,
+  getUserClasses,
+  setUserRole,
+  deactivateUser,
+  reactivateUser,
 };

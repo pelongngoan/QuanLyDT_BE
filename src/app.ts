@@ -2,12 +2,16 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { config } from "./config/config";
 import { router } from "./router"; // Import your main router
+import cors from "cors";
+
+// Enable CORS
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json()); // Ensure JSON parsing middleware is added
 app.use(router); // Register router with app
 

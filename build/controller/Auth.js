@@ -31,27 +31,28 @@ exports.check_verify_code = check_verify_code;
 exports.changeInfoAfterSignup = changeInfoAfterSignup;
 exports.auth = auth;
 const Account_1 = require("../database/models/Account");
-// import { ROLE, STATE } from "../database/enum/enum";
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const uuid_1 = require("uuid");
 const validator_1 = __importDefault(require("validator"));
 const crypto_1 = __importDefault(require("crypto"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const Teacher_1 = require("../database/models/Teacher");
 function signup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password, role } = req.body;
             if (!email || !password || !role) {
                 res.status(400).json({ message: "All fields are required." });
+                return;
             }
             if (!validator_1.default.isEmail(email)) {
                 res.status(400).json({ message: "Invalid email format." });
+                return;
             }
             const existingUser = yield Account_1.Account.findOne({ where: { email } });
             if (existingUser) {
                 res.status(400).json({ message: "User already exists." });
+                return;
             }
             const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
             const newAccount = yield Account_1.Account.create({
@@ -61,16 +62,6 @@ function signup(req, res) {
                 state: Account_1.STATE.LOCKED,
                 id: (0, uuid_1.v4)(),
             });
-            console.log(role === Account_1.ROLE.TEACHER);
-            // Check if the role is Teacher, then create a corresponding Teacher record
-            if (role === Account_1.ROLE.TEACHER) {
-                console.log("first");
-                Teacher_1.Teacher.create({
-                    accountId: newAccount.id,
-                    classList: [], // Initial empty array
-                    assignmentsCreated: [], // Initial empty array
-                });
-            }
             res.status(201).json({
                 message: "User registered successfully!",
                 user: newAccount,
@@ -88,20 +79,31 @@ function login(req, res) {
             const { email, password } = req.body;
             if (!email || !password) {
                 res.status(400).json({ message: "Email, password are required." });
+                return;
             }
             if (!validator_1.default.isEmail(email)) {
                 res.status(400).json({ message: "Invalid email format." });
+                return;
             }
             const account = yield Account_1.Account.findOne({ where: { email } });
             if (!account) {
                 res.status(401).json({ message: "Invalid email or password." });
-                throw new Error("Error");
+                return;
             }
             const isMatch = yield bcryptjs_1.default.compare(password, account.password);
             if (!isMatch) {
                 res.status(401).json({ message: "Invalid email or password." });
+                return;
             }
-            const token = jsonwebtoken_1.default.sign({ id: account.id, role: account.role }, process.env.SECRET_KEY, { expiresIn: "1h" });
+            const secretKey = process.env.SECRET_KEY;
+            if (!secretKey) {
+                console.error("Missing SECRET_KEY in environment");
+                res.status(500).json({ message: "Internal server error." });
+                return;
+            }
+            const token = jsonwebtoken_1.default.sign({ id: account.id, role: account.role }, secretKey, {
+                expiresIn: "1h",
+            });
             let classList = [];
             if (account.role === Account_1.ROLE.STUDENT) {
                 classList = yield getStudentClassList(account.id);
@@ -112,7 +114,6 @@ function login(req, res) {
             res.status(200).json({
                 message: "Login successful!",
                 id: account.id,
-                // accountname: account.username,
                 token,
                 avatar: account.avatar,
                 active: account.state === Account_1.STATE.ACTIVE,
@@ -131,6 +132,7 @@ function logout(req, res) {
         const { token } = req.body;
         if (!token) {
             res.status(400).json({ message: "Token is required." });
+            return;
         }
         try {
             res.status(200).json({ message: "Logout successful!" });
@@ -148,6 +150,7 @@ function get_verify_code(req, res) {
             !validator_1.default.isEmail(email) ||
             !email.endsWith("@sis.hust.edu.vn")) {
             res.status(400).json({ message: "Invalid email. Must be a HUST email." });
+            return;
         }
         try {
             const verificationCode = crypto_1.default.randomBytes(3).toString("hex");
@@ -164,23 +167,19 @@ function get_verify_code(req, res) {
 function check_verify_code(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { email, verificationCode } = req.body;
-        // Validate the email and verification code
         if (!email || !verificationCode) {
             res
                 .status(400)
                 .json({ message: "Email and verification code are required." });
+            return;
         }
         try {
-            // Look up the user by email and verify the code
             const user = yield Account_1.Account.findOne({ where: { email, verificationCode } });
-            // If user or verification code doesn't match, return an error
             if (!user) {
                 res.status(401).json({ message: "Invalid email or verification code." });
-                throw new Error("Error");
+                return;
             }
-            // Update user status to active, if applicable, and return user details
             if (user.state === Account_1.STATE.LOCKED) {
-                console.log("first");
                 yield Account_1.Account.update({ state: Account_1.STATE.ACTIVE }, { where: { email } });
             }
             res.status(200).json({
@@ -198,64 +197,71 @@ function changeInfoAfterSignup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { token, username, avatar } = req.body;
         try {
-            // Validate inputs
             if (!token || !username || !avatar) {
-                return res
+                res
                     .status(400)
                     .json({ message: "Token, username, and avatar are required." });
+                return;
             }
-            // Verify and decode the token to get the user ID
-            const decoded = jsonwebtoken_1.default.verify(token, process.env.SECRET_KEY);
+            const secretKey = process.env.SECRET_KEY;
+            if (!secretKey) {
+                console.error("Missing SECRET_KEY in environment");
+                res.status(500).json({ message: "Internal server error." });
+                return;
+            }
+            const decoded = jsonwebtoken_1.default.verify(token, secretKey);
             const userId = decoded.id;
-            // Find the user by ID
             const user = yield Account_1.Account.findOne({ where: { id: userId } });
             if (!user) {
-                return res.status(404).json({ message: "User not found." });
+                res.status(404).json({ message: "User not found." });
+                return;
             }
-            // Update user info
-            // user.username = username;
             user.avatar = avatar;
             yield user.save();
-            // Respond with the updated user information
-            return res.status(200).json({
+            res.status(200).json({
                 message: "Information updated successfully!",
                 id: user.id,
-                // username: user.username,
                 email: user.email,
-                // created: user.createdAt,
                 avatar: user.avatar,
             });
+            return;
         }
         catch (error) {
-            if (error === "JsonWebTokenError") {
-                return res.status(401).json({ message: "Invalid token." });
+            if (error.name === "JsonWebTokenError") {
+                res.status(401).json({ message: "Invalid token." });
+                return;
+            }
+            if (error.name === "TokenExpiredError") {
+                res.status(401).json({ message: "Token expired." });
+                return;
             }
             console.error("Error updating user information: ", error);
-            return res.status(500).json({ message: "Server error." });
+            res.status(500).json({ message: "Server error." });
+            return;
         }
     });
 }
 const getStudentClassList = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Replace this with your actual implementation
+    // Replace with actual database call
     return [
         { classId: 1, className: "Math 101" },
         { classId: 2, className: "Science 101" },
     ];
 });
 const getLecturerClassList = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Replace this with your actual implementation
+    // Replace with actual database call
     return [{ classId: 3, className: "Physics 201" }];
 });
 const sendVerificationCode = (email, code) => __awaiter(void 0, void 0, void 0, function* () {
     const transporter = nodemailer_1.default.createTransport({
         service: "gmail",
         auth: {
-            user: "long.tl446@gmail.com",
-            pass: "sdaf gqnf odps aqab",
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
     });
     const mailOptions = {
-        from: "long.tl446@gmail.com",
+        from: process.env.EMAIL_USER,
         to: email,
         subject: "Your Verification Code",
         text: `Your verification code is: ${code}`,
@@ -268,29 +274,23 @@ function auth(req, res) {
             const id = res.locals.id;
             const role = res.locals.role;
             if (!id || !role) {
-                res.status(401);
-                throw new Error("invalid id or role");
+                return res.status(401).json({ message: "Invalid id or role" });
             }
             const account = yield Account_1.Account.findOne({
                 attributes: { exclude: ["token", "password"] },
                 where: { id: id },
             });
             if (!account) {
-                res.status(404);
-                throw new Error("Id does not exist");
+                return res.status(404).json({ message: "Id does not exist" });
             }
             const _a = account.dataValues, { password } = _a, accountWithoutPassword = __rest(_a, ["password"]);
-            res.status(200).send({
-                account: accountWithoutPassword,
-            });
+            res.status(200).json({ account: accountWithoutPassword });
         }
-        catch (err) {
-            var statusCode = res.statusCode == 200 ? null : res.statusCode;
-            statusCode = statusCode || 404;
-            res.status(statusCode).json({
-                message: "Authentication failed",
-                error: err.message,
-            });
+        catch (error) {
+            console.error("Authentication error:", error);
+            res
+                .status(500)
+                .json({ message: "Authentication failed", error: error.message });
         }
     });
 }

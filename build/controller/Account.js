@@ -9,21 +9,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactivate_user = deactivate_user;
-exports.get_user_classes = get_user_classes;
-exports.get_user_info = get_user_info;
-exports.reactivate_user = reactivate_user;
-exports.set_user_info = set_user_info;
-exports.set_user_role = set_user_role;
+exports.getUserInfo = getUserInfo;
+exports.setUserInfo = setUserInfo;
+exports.getUserClasses = getUserClasses;
+exports.setUserRole = setUserRole;
+exports.deactivateUser = deactivateUser;
+exports.reactivateUser = reactivateUser;
 const Account_1 = require("../database/models/Account");
 const Class_1 = require("../database/models/Class");
-// import { ROLE, STATE } from "../database/enum/enum";
-function get_user_info(req, res, next) {
+const Notification_1 = require("../database/models/Notification");
+const Message_1 = require("../database/models/Message");
+function getUserInfo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         try {
-            const user = yield Account_1.Account.findOne({ where: { id: userId } });
+            const user = yield Account_1.Account.findOne({
+                where: { id: userId },
+                include: [Notification_1.Notification, Message_1.Message],
+            });
             if (!user) {
                 res.status(404).json({ message: "User not found." });
                 return;
@@ -35,7 +39,8 @@ function get_user_info(req, res, next) {
         }
     });
 }
-function set_user_info(req, res, next) {
+// Update user information
+function setUserInfo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
@@ -58,12 +63,15 @@ function set_user_info(req, res, next) {
         }
     });
 }
-function get_user_classes(req, res, next) {
+// Retrieve classes for the user (teacher role)
+function getUserClasses(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         try {
-            const classes = yield Class_1.Class.findAll({ where: { teacherId: userId } });
+            const classes = yield Class_1.Class.findAll({
+                where: { teacherId: userId },
+            });
             res.status(200).json({ classes });
         }
         catch (error) {
@@ -71,7 +79,8 @@ function get_user_classes(req, res, next) {
         }
     });
 }
-function set_user_role(req, res, next) {
+// Set user role (admin-only)
+function setUserRole(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const adminRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
@@ -96,7 +105,8 @@ function set_user_role(req, res, next) {
         }
     });
 }
-function deactivate_user(req, res, next) {
+// Deactivate user (admin-only)
+function deactivateUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const adminRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
@@ -121,7 +131,8 @@ function deactivate_user(req, res, next) {
         }
     });
 }
-function reactivate_user(req, res, next) {
+// Reactivate user (admin-only)
+function reactivateUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const adminRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
