@@ -14,9 +14,13 @@ exports.create_assignment = create_assignment;
 exports.delete_assignment = delete_assignment;
 exports.edit_assignment = edit_assignment;
 exports.grade_assignment = grade_assignment;
+exports.get_assignment_info = get_assignment_info;
+exports.get_assignment_list = get_assignment_list;
 const Assignment_1 = require("../database/models/Assignment");
 const Submission_1 = require("../database/models/Submission");
 const enum_1 = require("../database/enum/enum");
+const Grade_1 = require("../database/models/Grade");
+const uuid_1 = require("uuid");
 function create_assignment(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
@@ -47,10 +51,10 @@ function create_assignment(req, res, next) {
 }
 function edit_assignment(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        const { assignmentId, title, description, dueDate } = req.body;
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-        const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+        var _a;
+        const { assignmentId } = req.params;
+        const { title, description, dueDate } = req.body;
+        const userRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
         if (userRole !== enum_1.ROLE.TEACHER) {
             res
                 .status(403)
@@ -59,7 +63,7 @@ function edit_assignment(req, res, next) {
         }
         try {
             const assignment = yield Assignment_1.Assignment.findOne({
-                where: { id: assignmentId, createdBy: userId },
+                where: { id: assignmentId },
             });
             if (!assignment) {
                 res.status(404).json({
@@ -79,10 +83,9 @@ function edit_assignment(req, res, next) {
 }
 function delete_assignment(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
-        const { assignmentId } = req.body;
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-        const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+        var _a;
+        const { assignmentId } = req.params;
+        const userRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
         if (userRole !== enum_1.ROLE.TEACHER) {
             res.status(403).json({
                 message: "Access denied. Only teachers can delete assignments.",
@@ -91,7 +94,7 @@ function delete_assignment(req, res, next) {
         }
         try {
             const assignment = yield Assignment_1.Assignment.findOne({
-                where: { id: assignmentId, createdBy: userId },
+                where: { id: assignmentId },
             });
             if (!assignment) {
                 res.status(404).json({
@@ -110,7 +113,8 @@ function delete_assignment(req, res, next) {
 function submit_assignment(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
-        const { assignmentId, fileUrl } = req.body;
+        const { assignmentId } = req.params;
+        const { fileUrl } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
         if (userRole !== enum_1.ROLE.STUDENT) {
@@ -138,7 +142,8 @@ function submit_assignment(req, res, next) {
 function grade_assignment(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        const { submissionId, grade } = req.body;
+        const { submissionId } = req.params;
+        const { grade, comments } = req.body;
         const userRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
         if (userRole !== enum_1.ROLE.TEACHER) {
             res
@@ -154,10 +159,70 @@ function grade_assignment(req, res, next) {
                 res.status(404).json({ message: "Submission not found." });
                 return;
             }
-            yield submission.update({ grade, gradedAt: new Date() });
+            const [gradeEntry, created] = yield Grade_1.Grade.findOrCreate({
+                where: {
+                    assignmentId: submission.assignmentId,
+                    studentId: submission.studentId,
+                },
+                defaults: {
+                    id: (0, uuid_1.v4)(),
+                    grade,
+                    assignmentId: submission.assignmentId,
+                    studentId: submission.studentId,
+                    comments,
+                },
+            });
+            if (!created) {
+                gradeEntry.grade = grade;
+                gradeEntry.comments = comments;
+                yield gradeEntry.save();
+            }
+            res.status(200).json({
+                message: created
+                    ? "Assignment graded successfully!"
+                    : "Grade updated successfully!",
+                grade: gradeEntry,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+function get_assignment_info(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { assignmentId } = req.params;
+        try {
+            const assignment = yield Assignment_1.Assignment.findOne({
+                where: { id: assignmentId },
+            });
+            if (!assignment) {
+                res.status(404).json({ message: "Assignment not found." });
+                return;
+            }
             res
                 .status(200)
-                .json({ message: "Assignment graded successfully!", submission });
+                .json({ message: "Assignment retrieved successfully!", assignment });
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+function get_assignment_list(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { classId } = req.query;
+        try {
+            const assignments = yield Assignment_1.Assignment.findAll({
+                where: { classId },
+            });
+            if (assignments.length === 0) {
+                res.status(404).json({ message: "No assignments found for this class." });
+                return;
+            }
+            res
+                .status(200)
+                .json({ message: "Assignments retrieved successfully!", assignments });
         }
         catch (error) {
             next(error);

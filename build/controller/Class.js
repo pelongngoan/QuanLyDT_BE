@@ -177,7 +177,6 @@ function getClassSchedule(req, res) {
             return;
         }
         try {
-            console.log(classId);
             const classSchedule = yield Class_1.Class.findOne({
                 where: { id: classId },
                 attributes: ["startDate", "endDate"],
