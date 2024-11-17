@@ -9,14 +9,17 @@ import nodemailer from "nodemailer";
 import { decode_refresh, sign_access, sign_refresh } from "../utils/jwt";
 import { AccountSign } from "../types";
 import { ROLE, STATE } from "../database/enum/enum";
+import { Teacher } from "../database/models/Teacher";
+import { Student } from "../database/models/Student";
 
 async function signup(req: Request, res: Response) {
   try {
-    const { email, password, role } = req.body;
+    const { email, password, role, firstName, lastName } = req.body;
 
     if (!email || !password || !role) {
-      res.status(400).json({ message: "All fields are required." });
-      return;
+      res
+        .status(400)
+        .json({ message: "Email, password, and role are required." });
     }
 
     if (!validator.isEmail(email)) {
@@ -24,27 +27,66 @@ async function signup(req: Request, res: Response) {
       return;
     }
 
-    const existingUser = await Account.findOne({ where: { email } });
-    if (existingUser) {
-      res.status(400).json({ message: "User already exists." });
+    if (!Object.values(ROLE).includes(role)) {
+      res.status(400).json({
+        message: `Invalid role. Allowed roles are: ${Object.values(ROLE).join(
+          ", "
+        )}`,
+      });
       return;
     }
 
+    if (password.length < 8) {
+      res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters long." });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await Account.findOne({ where: { email } });
+    if (existingUser) {
+      res.status(400).json({ message: "User with this email already exists." });
+      return;
+    }
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new account
     const newAccount = await Account.create({
+      id: uuidv4(),
+      firstName: firstName || null,
+      lastName: lastName || null,
       email,
       password: hashedPassword,
       role,
-      state: STATE.LOCKED,
-      id: uuidv4(),
+      state: STATE.LOCKED, // Default to LOCKED state until activation/verification
     });
+
+    if (role === ROLE.TEACHER) {
+      await Teacher.create({
+        id: uuidv4(),
+        accountId: newAccount.id,
+      });
+    } else if (role === ROLE.STUDENT) {
+      await Student.create({
+        id: uuidv4(),
+        accountId: newAccount.id,
+      });
+    }
 
     res.status(201).json({
       message: "User registered successfully!",
-      user: newAccount,
+      user: {
+        id: newAccount.id,
+        email: newAccount.email,
+        role: newAccount.role,
+        state: newAccount.state,
+      },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error in signup:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 }

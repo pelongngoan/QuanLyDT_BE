@@ -32,7 +32,7 @@ exports.default = (sequelize) => {
             allowNull: false,
         },
         major: { type: sequelize_1.DataTypes.STRING(100), allowNull: true },
-        enrollmentYear: { type: sequelize_1.DataTypes.INTEGER.UNSIGNED, allowNull: false },
+        enrollmentYear: { type: sequelize_1.DataTypes.INTEGER.UNSIGNED, allowNull: true },
     }, {
         sequelize,
         modelName: "Student",

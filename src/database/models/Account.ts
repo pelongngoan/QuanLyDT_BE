@@ -27,10 +27,27 @@ export class Account extends Model {
       foreignKey: "receiverId",
       onDelete: "CASCADE",
     });
+    Account.hasOne(models.Teacher, {
+      foreignKey: "accountId",
+      onDelete: "CASCADE",
+    });
+    Account.hasOne(models.Student, {
+      foreignKey: "accountId",
+      onDelete: "CASCADE",
+    });
   }
 
-  isEmailVerified() {
+  // Helper Method: Check if email is verified
+  isEmailVerified(): boolean {
     return this.state === STATE.ACTIVE;
+  }
+
+  // Helper Method: Generate a full name
+  getFullName(): string | null {
+    if (this.firstName && this.lastName) {
+      return `${this.firstName} ${this.lastName}`;
+    }
+    return null;
   }
 }
 
@@ -54,6 +71,7 @@ export default (sequelize: Sequelize) => {
       state: {
         type: DataTypes.ENUM(...Object.values(STATE)),
         defaultValue: STATE.PENDING,
+        allowNull: false,
       },
       verificationCode: { type: DataTypes.STRING, allowNull: true },
       avatar: { type: DataTypes.STRING, allowNull: true },
@@ -61,8 +79,9 @@ export default (sequelize: Sequelize) => {
     {
       sequelize: sequelizeConnection,
       modelName: "Account",
+      timestamps: true, // Automatically adds `createdAt` and `updatedAt`
     }
   );
+
   return Account;
 };
-// export { Account };

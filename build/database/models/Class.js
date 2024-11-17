@@ -24,7 +24,11 @@ exports.default = (sequelize) => {
             primaryKey: true,
         },
         className: { type: sequelize_1.DataTypes.STRING(100), allowNull: false },
-        semester: { type: sequelize_1.DataTypes.STRING(50), allowNull: false },
+        semester: {
+            type: sequelize_1.DataTypes.STRING(50),
+            allowNull: false,
+            defaultValue: "N/A",
+        },
         maxStudents: { type: sequelize_1.DataTypes.INTEGER.UNSIGNED, allowNull: false },
         startDate: { type: sequelize_1.DataTypes.DATE, allowNull: false },
         endDate: { type: sequelize_1.DataTypes.DATE, allowNull: false },

@@ -37,7 +37,7 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
       },
       major: { type: DataTypes.STRING(100), allowNull: true },
-      enrollmentYear: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+      enrollmentYear: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
     },
     {
       sequelize,

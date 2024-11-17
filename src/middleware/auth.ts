@@ -86,16 +86,4 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-function isTeacher(req: Request, res: Response, next: NextFunction) {
-  const user = req.user;
-
-  if (!user || user.role !== "TEACHER") {
-    res.status(403).json({
-      message: "Access denied. Only lecturers can perform this action.",
-    });
-    return;
-  }
-  next();
-}
-
-export { authenticate, isTeacher };
+export { authenticate };

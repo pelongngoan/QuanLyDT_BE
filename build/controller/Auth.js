@@ -39,38 +39,75 @@ const crypto_1 = __importDefault(require("crypto"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const jwt_1 = require("../utils/jwt");
 const enum_1 = require("../database/enum/enum");
+const Teacher_1 = require("../database/models/Teacher");
+const Student_1 = require("../database/models/Student");
 function signup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { email, password, role } = req.body;
+            const { email, password, role, firstName, lastName } = req.body;
             if (!email || !password || !role) {
-                res.status(400).json({ message: "All fields are required." });
-                return;
+                res
+                    .status(400)
+                    .json({ message: "Email, password, and role are required." });
             }
             if (!validator_1.default.isEmail(email)) {
                 res.status(400).json({ message: "Invalid email format." });
                 return;
             }
-            const existingUser = yield Account_1.Account.findOne({ where: { email } });
-            if (existingUser) {
-                res.status(400).json({ message: "User already exists." });
+            if (!Object.values(enum_1.ROLE).includes(role)) {
+                res.status(400).json({
+                    message: `Invalid role. Allowed roles are: ${Object.values(enum_1.ROLE).join(", ")}`,
+                });
                 return;
             }
+            if (password.length < 8) {
+                res
+                    .status(400)
+                    .json({ message: "Password must be at least 8 characters long." });
+                return;
+            }
+            // Check if user already exists
+            const existingUser = yield Account_1.Account.findOne({ where: { email } });
+            if (existingUser) {
+                res.status(400).json({ message: "User with this email already exists." });
+                return;
+            }
+            // Hash password
             const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
+            // Create a new account
             const newAccount = yield Account_1.Account.create({
+                id: (0, uuid_1.v4)(),
+                firstName: firstName || null,
+                lastName: lastName || null,
                 email,
                 password: hashedPassword,
                 role,
-                state: enum_1.STATE.LOCKED,
-                id: (0, uuid_1.v4)(),
+                state: enum_1.STATE.LOCKED, // Default to LOCKED state until activation/verification
             });
+            if (role === enum_1.ROLE.TEACHER) {
+                yield Teacher_1.Teacher.create({
+                    id: (0, uuid_1.v4)(),
+                    accountId: newAccount.id,
+                });
+            }
+            else if (role === enum_1.ROLE.STUDENT) {
+                yield Student_1.Student.create({
+                    id: (0, uuid_1.v4)(),
+                    accountId: newAccount.id,
+                });
+            }
             res.status(201).json({
                 message: "User registered successfully!",
-                user: newAccount,
+                user: {
+                    id: newAccount.id,
+                    email: newAccount.email,
+                    role: newAccount.role,
+                    state: newAccount.state,
+                },
             });
         }
         catch (error) {
-            console.error(error);
+            console.error("Error in signup:", error);
             res.status(500).json({ message: "Internal server error." });
         }
     });

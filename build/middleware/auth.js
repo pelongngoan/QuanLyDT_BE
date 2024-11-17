@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticate = authenticate;
-exports.isTeacher = isTeacher;
 const jwt_1 = require("../utils/jwt"); // Only keep necessary imports
 const Account_1 = require("../database/models/Account");
 function authenticate(req, res, next) {
@@ -96,14 +95,4 @@ function authenticate(req, res, next) {
                 .json({ message: "Could not validate token", error: err.message });
         }
     });
-}
-function isTeacher(req, res, next) {
-    const user = req.user;
-    if (!user || user.role !== "TEACHER") {
-        res.status(403).json({
-            message: "Access denied. Only lecturers can perform this action.",
-        });
-        return;
-    }
-    next();
 }
