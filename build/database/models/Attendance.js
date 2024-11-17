@@ -45,6 +45,10 @@ exports.default = (sequelize) => {
             allowNull: false,
             defaultValue: true,
         },
+        date: {
+            type: sequelize_1.DataTypes.DATEONLY,
+            allowNull: false,
+        },
     }, {
         sequelize,
         modelName: "Attendance",

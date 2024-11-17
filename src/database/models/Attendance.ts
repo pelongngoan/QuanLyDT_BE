@@ -8,6 +8,7 @@ export class Attendance extends Model {
   declare sessionId: string;
   declare studentId: string;
   declare isPresent: boolean;
+  declare date: Date;
 
   static associate(models: any) {
     Attendance.belongsTo(models.Session, {
@@ -49,6 +50,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: true,
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
       },
     },
     {

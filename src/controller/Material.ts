@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Class } from "../database/models/Class";
 import { Material } from "../database/models/Material";
 
+// Upload material
 async function upload_material(req: Request, res: Response) {
   const { classId, title, description, fileUrl } = req.body;
 
@@ -11,6 +12,13 @@ async function upload_material(req: Request, res: Response) {
   }
 
   try {
+    // Ensure class exists before associating material
+    const classExists = await Class.findByPk(classId);
+    if (!classExists) {
+      res.status(404).json({ message: "Class not found." });
+      return;
+    }
+
     const material = await Material.create({
       classId,
       title,
@@ -26,6 +34,8 @@ async function upload_material(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+// Edit material
 async function edit_material(req: Request, res: Response) {
   const { materialId, title, description, fileUrl } = req.body;
 
@@ -56,6 +66,8 @@ async function edit_material(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+// Delete material
 async function delete_material(req: Request, res: Response) {
   const { materialId } = req.body;
 
@@ -79,6 +91,8 @@ async function delete_material(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+// Get material information
 async function get_material_info(req: Request, res: Response) {
   const { materialId } = req.body;
 
@@ -101,6 +115,8 @@ async function get_material_info(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+// Get material list for a class
 async function get_material_list(req: Request, res: Response) {
   const { classId } = req.body;
 
@@ -117,6 +133,7 @@ async function get_material_list(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
 export {
   delete_material,
   edit_material,

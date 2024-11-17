@@ -14,7 +14,9 @@ exports.edit_material = edit_material;
 exports.get_material_info = get_material_info;
 exports.get_material_list = get_material_list;
 exports.upload_material = upload_material;
+const Class_1 = require("../database/models/Class");
 const Material_1 = require("../database/models/Material");
+// Upload material
 function upload_material(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { classId, title, description, fileUrl } = req.body;
@@ -23,6 +25,12 @@ function upload_material(req, res) {
             return;
         }
         try {
+            // Ensure class exists before associating material
+            const classExists = yield Class_1.Class.findByPk(classId);
+            if (!classExists) {
+                res.status(404).json({ message: "Class not found." });
+                return;
+            }
             const material = yield Material_1.Material.create({
                 classId,
                 title,
@@ -39,6 +47,7 @@ function upload_material(req, res) {
         }
     });
 }
+// Edit material
 function edit_material(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { materialId, title, description, fileUrl } = req.body;
@@ -67,6 +76,7 @@ function edit_material(req, res) {
         }
     });
 }
+// Delete material
 function delete_material(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { materialId } = req.body;
@@ -89,6 +99,7 @@ function delete_material(req, res) {
         }
     });
 }
+// Get material information
 function get_material_info(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { materialId } = req.body;
@@ -110,6 +121,7 @@ function get_material_info(req, res) {
         }
     });
 }
+// Get material list for a class
 function get_material_list(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { classId } = req.body;

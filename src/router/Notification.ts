@@ -12,10 +12,10 @@ import { authenticate } from "../middleware/auth";
 const router = Router();
 
 router.post("/send", authenticate, send_notification);
-router.get("/get", authenticate, get_notifications);
-router.put("/mark_as_read", authenticate, mark_notification_as_read);
-router.get("/conversation", authenticate, get_conversation);
-router.get("/conversations", authenticate, get_list_conversation);
-router.delete("/delete_message", authenticate, delete_message);
+router.get("/get/:id", authenticate, get_notifications);
+router.put("/mark_as_read/:id", authenticate, mark_notification_as_read);
+router.get("/conversation/:id", authenticate, get_conversation);
+router.get("/conversations/:id", authenticate, get_list_conversation);
+router.delete("/delete_message/:id", authenticate, delete_message);
 
 export default router;

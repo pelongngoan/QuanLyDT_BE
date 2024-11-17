@@ -22,8 +22,23 @@ function sign_access(user: AccountSign) {
   });
 }
 
+// function decode_refresh(token: string): jwt.JwtPayload | string {
+//   console.log("token: " + token);
+//   console.log("verify: " + jwt.verify(token, REFRESH_TOKEN_SECRET));
+
+//   return jwt.verify(token, REFRESH_TOKEN_SECRET);
+// }
+
 function decode_refresh(token: string): jwt.JwtPayload | string {
-  return jwt.verify(token, REFRESH_TOKEN_SECRET);
+  console.log("token: " + token);
+  try {
+    const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET);
+    console.log("verify result: ", decoded);
+    return decoded;
+  } catch (error) {
+    console.error("Token verification failed: ", error);
+    throw new Error("Invalid refresh token");
+  }
 }
 
 function decode_access(token: string): jwt.JwtPayload | string {

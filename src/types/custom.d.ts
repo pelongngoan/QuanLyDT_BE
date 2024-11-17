@@ -3,7 +3,7 @@ import { AccountDecode } from "../type/index"; // Adjust this path based on wher
 declare global {
   namespace Express {
     interface Request {
-      user?: any; // Replace AccountDecode with the type of your decoded JWT object
+      user?: any;
     }
   }
 }

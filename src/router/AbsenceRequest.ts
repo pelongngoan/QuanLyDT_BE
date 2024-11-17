@@ -15,7 +15,7 @@ absenceRequestRoutes.post(
   review_absence_request
 );
 absenceRequestRoutes.get(
-  "/get_absence_requests",
+  "/get_absence_requests/:id",
   authenticate,
   get_absence_requests
 );

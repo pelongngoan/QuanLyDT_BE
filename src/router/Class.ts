@@ -12,10 +12,8 @@ import { isTeacher, authenticate } from "../middleware/auth";
 export const classRoutes = Router();
 
 classRoutes.post("/create", authenticate, isTeacher, create_class);
-classRoutes.put("/edit", authenticate, isTeacher, edit_class);
-classRoutes.delete("/delete", authenticate, isTeacher, delete_class);
-
-// Only apply authenticate for class info and schedule
-classRoutes.get("/info", authenticate, get_class_info);
-classRoutes.get("/list", authenticate, isTeacher, get_class_list); // Only teachers can view class list
-classRoutes.get("/schedule", authenticate, get_class_schedule);
+classRoutes.put("/edit/:id", authenticate, isTeacher, edit_class);
+classRoutes.delete("/delete/:id", authenticate, isTeacher, delete_class);
+classRoutes.get("/info/:id", authenticate, get_class_info);
+classRoutes.get("/list/:id", authenticate, isTeacher, get_class_list); // Only teachers can view class list
+classRoutes.get("/schedule/:id", authenticate, get_class_schedule);

@@ -7,4 +7,4 @@ const auth_1 = require("../middleware/auth");
 exports.absenceRequestRoutes = (0, express_1.Router)();
 exports.absenceRequestRoutes.post("/request_absence", auth_1.authenticate, LeaveRequest_1.request_absence);
 exports.absenceRequestRoutes.post("/review_absence_request", auth_1.authenticate, LeaveRequest_1.review_absence_request);
-exports.absenceRequestRoutes.get("/get_absence_requests", auth_1.authenticate, LeaveRequest_1.get_absence_requests);
+exports.absenceRequestRoutes.get("/get_absence_requests/:id", auth_1.authenticate, LeaveRequest_1.get_absence_requests);

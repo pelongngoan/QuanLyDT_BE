@@ -1,20 +1,31 @@
 import { Request, Response } from "express";
 import { LeaveRequest } from "../database/models/LeaveRequest";
-import { Class } from "../database/models/Class.js";
+import { Student } from "../database/models/Student";
+import { Class } from "../database/models/Class";
 
+// Submit absence request
 async function request_absence(req: Request, res: Response) {
-  const { userId, classId, date, reason } = req.body;
+  const { studentId, classId, startDate, endDate, reason } = req.body;
 
-  if (!userId || !classId || !date || !reason) {
+  if (!studentId || !classId || !startDate || !endDate || !reason) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
+    const studentExists = await Student.findByPk(studentId);
+    const classExists = await Class.findByPk(classId);
+
+    if (!studentExists || !classExists) {
+      res.status(404).json({ message: "Student or class not found." });
+      return;
+    }
+
     const absenceRequest = await LeaveRequest.create({
-      userId,
+      studentId,
       classId,
-      date,
+      startDate,
+      endDate,
       reason,
       status: "PENDING", // Initial status
     });
@@ -28,6 +39,8 @@ async function request_absence(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+// Review and update absence request status
 async function review_absence_request(req: Request, res: Response) {
   const { requestId, status } = req.body;
 
@@ -49,7 +62,7 @@ async function review_absence_request(req: Request, res: Response) {
       return;
     }
 
-    absenceRequest.update({ status });
+    await absenceRequest.update({ status });
     res.status(200).json({
       message: "Absence request reviewed successfully.",
       absenceRequest,
@@ -59,8 +72,10 @@ async function review_absence_request(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+// Get all absence requests for a specific class
 async function get_absence_requests(req: Request, res: Response) {
-  const { classId } = req.body;
+  const { classId } = req.query;
 
   if (!classId) {
     res.status(400).json({ message: "Class ID is required." });
@@ -78,4 +93,5 @@ async function get_absence_requests(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
 export { get_absence_requests, request_absence, review_absence_request };

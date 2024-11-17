@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { config } from "./config/config";
 import { router } from "./router"; // Import your main router
 import cors from "cors";
-
+import cookieParser from "cookie-parser";
 // Enable CORS
 
 dotenv.config();
@@ -12,6 +12,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json()); // Ensure JSON parsing middleware is added
 app.use(router); // Register router with app
 
@@ -20,7 +21,7 @@ config(app).then(() => {
 });
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Tinggg!");
+  res.send("Hello world!");
 });
 
 app.listen(port, () => {

@@ -14,18 +14,28 @@ exports.get_attendance_record = get_attendance_record;
 exports.set_attendance_status = set_attendance_status;
 exports.take_attendance = take_attendance;
 const Attendance_1 = require("../database/models/Attendance");
+const Session_1 = require("../database/models/Session");
+const Student_1 = require("../database/models/Student");
+// Record attendance
 function take_attendance(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId, studentId, status, date } = req.body;
-        if (!classId || !studentId || !status || !date) {
+        const { sessionId, studentId, status, date } = req.body;
+        if (!sessionId || !studentId || !status || !date) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
+            // Ensure the session and student exist
+            const sessionExists = yield Session_1.Session.findByPk(sessionId);
+            const studentExists = yield Student_1.Student.findByPk(studentId);
+            if (!sessionExists || !studentExists) {
+                res.status(404).json({ message: "Session or student not found." });
+                return;
+            }
             const attendanceRecord = yield Attendance_1.Attendance.create({
-                classId,
+                sessionId,
                 studentId,
-                status,
+                isPresent: status.toLowerCase() === "present",
                 date,
             });
             res.status(201).json({
@@ -39,16 +49,17 @@ function take_attendance(req, res) {
         }
     });
 }
+// Retrieve a specific attendance record
 function get_attendance_record(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId, studentId, date } = req.query;
-        if (!classId || !studentId || !date) {
+        const { sessionId, studentId, date } = req.query;
+        if (!sessionId || !studentId || !date) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
             const attendanceRecord = yield Attendance_1.Attendance.findOne({
-                where: { classId, studentId, date },
+                where: { sessionId, studentId, date },
             });
             if (!attendanceRecord) {
                 res.status(404).json({ message: "Attendance record not found." });
@@ -62,22 +73,23 @@ function get_attendance_record(req, res) {
         }
     });
 }
+// Update attendance status
 function set_attendance_status(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId, studentId, date, status } = req.body;
-        if (!classId || !studentId || !date || !status) {
+        const { sessionId, studentId, date, status } = req.body;
+        if (!sessionId || !studentId || !date || !status) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
             const attendanceRecord = yield Attendance_1.Attendance.findOne({
-                where: { classId, studentId, date },
+                where: { sessionId, studentId, date },
             });
             if (!attendanceRecord) {
                 res.status(404).json({ message: "Attendance record not found." });
                 return;
             }
-            attendanceRecord.isPresent = status;
+            attendanceRecord.isPresent = status.toLowerCase() === "present";
             yield attendanceRecord.save();
             res.status(200).json({
                 message: "Attendance status updated successfully!",
@@ -90,16 +102,17 @@ function set_attendance_status(req, res) {
         }
     });
 }
+// Get all attendance records for a specific session and date
 function get_attendance_list(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId, date } = req.query;
-        if (!classId || !date) {
+        const { sessionId, date } = req.query;
+        if (!sessionId || !date) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
             const attendanceList = yield Attendance_1.Attendance.findAll({
-                where: { classId, date },
+                where: { sessionId, date },
             });
             if (attendanceList.length === 0) {
                 res

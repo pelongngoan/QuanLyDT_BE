@@ -17,16 +17,16 @@ exports.deactivateUser = deactivateUser;
 exports.reactivateUser = reactivateUser;
 const Account_1 = require("../database/models/Account");
 const Class_1 = require("../database/models/Class");
-const Notification_1 = require("../database/models/Notification");
-const Message_1 = require("../database/models/Message");
+const enum_1 = require("../database/enum/enum");
 function getUserInfo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const userId = req.params.id;
+        console.log("alo:" + req.params.id);
         try {
+            console.log(userId);
             const user = yield Account_1.Account.findOne({
                 where: { id: userId },
-                include: [Notification_1.Notification, Message_1.Message],
+                // include: [Notification, Message],
             });
             if (!user) {
                 res.status(404).json({ message: "User not found." });
@@ -45,6 +45,8 @@ function setUserInfo(req, res, next) {
         var _a;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const { firstName, lastName, avatar } = req.body;
+        console.log(firstName);
+        console.log(lastName);
         try {
             const user = yield Account_1.Account.findOne({ where: { id: userId } });
             if (!user) {
@@ -83,9 +85,11 @@ function getUserClasses(req, res, next) {
 function setUserRole(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
+        console.log("adminRole");
         const adminRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
         const { userId, role } = req.body;
-        if (adminRole !== Account_1.ROLE.ADMIN) {
+        console.log(adminRole);
+        if (adminRole !== enum_1.ROLE.ADMIN) {
             res
                 .status(403)
                 .json({ message: "Access denied. Only admin can set roles." });
@@ -111,7 +115,7 @@ function deactivateUser(req, res, next) {
         var _a;
         const adminRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
         const { userId } = req.body;
-        if (adminRole !== Account_1.ROLE.ADMIN) {
+        if (adminRole !== enum_1.ROLE.ADMIN) {
             res
                 .status(403)
                 .json({ message: "Access denied. Only admin can deactivate users." });
@@ -123,7 +127,7 @@ function deactivateUser(req, res, next) {
                 res.status(404).json({ message: "User not found." });
                 return;
             }
-            yield user.update({ state: Account_1.STATE.LOCKED });
+            yield user.update({ state: enum_1.STATE.LOCKED });
             res.status(200).json({ message: "User deactivated successfully!" });
         }
         catch (error) {
@@ -137,7 +141,7 @@ function reactivateUser(req, res, next) {
         var _a;
         const adminRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
         const { userId } = req.body;
-        if (adminRole !== Account_1.ROLE.ADMIN) {
+        if (adminRole !== enum_1.ROLE.ADMIN) {
             res
                 .status(403)
                 .json({ message: "Access denied. Only admin can reactivate users." });
@@ -149,7 +153,7 @@ function reactivateUser(req, res, next) {
                 res.status(404).json({ message: "User not found." });
                 return;
             }
-            yield user.update({ state: Account_1.STATE.ACTIVE });
+            yield user.update({ state: enum_1.STATE.ACTIVE });
             res.status(200).json({ message: "User reactivated successfully!" });
         }
         catch (error) {

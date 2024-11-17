@@ -1,50 +1,49 @@
 import { NextFunction, Request, Response } from "express";
-import { decode_access, decode_refresh, sign_access } from "../utils/jwt";
-import { AccountDecode, AccountSign } from "../types";
+import { decode_access, decode_refresh, sign_access } from "../utils/jwt"; // Only keep necessary imports
 import { Account } from "../database/models/Account";
-// import { ROLE } from "../database/enum/enum";
+import { AccountDecode, AccountSign } from "../types";
 
 async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
-    const accessToken = req.headers["authorization"];
+    const accessToken = req.headers["authorization"]?.split(" ")[1];
     const refreshToken = req.cookies["refreshToken"];
-
-    const handleTokens = async (token: string, isRefresh: boolean) => {
-      const decode = isRefresh ? decode_refresh(token) : decode_access(token);
-
-      if (typeof decode === "string") {
-        throw new Error("Invalid token format");
-      }
-
-      const accountSign: AccountSign = {
-        id: decode.id,
-        role: decode.role,
-      };
-
-      const account = await Account.findOne({ where: { id: decode.id } });
-      if (!account) {
-        throw new Error("Account not found");
-      }
-
-      if (isRefresh && account.token !== token) {
-        throw new Error("Invalid refresh token");
-      }
-
-      return accountSign;
-    };
+    console.log("accessToken: " + accessToken);
+    console.log("refreshToken: " + refreshToken);
 
     if (accessToken) {
       try {
-        const accountSign = await handleTokens(accessToken, false);
-        // req.user = accountSign; // Attach user info to the request
-        next(); // Call next() to proceed to the next middleware
+        const decode = decode_access(accessToken) as AccountDecode;
+        res.locals.id = decode.id;
+        res.locals.role = decode.role;
+        req.user = { id: decode.id, role: decode.role };
+        next();
       } catch (err: any) {
+        console.error("Error decoding access token: ", err);
         if (!refreshToken) {
           res.status(401).json({ message: "Access denied. No token provided" });
+          return;
         }
-        // Handle refresh token logic
         try {
-          const accountSign = await handleTokens(refreshToken, true);
+          console.log("Attempting to decode refresh token...");
+
+          const decode = decode_refresh(refreshToken) as AccountDecode;
+          console.log(decode);
+
+          const accountSign: AccountSign = { id: decode.id, role: decode.role };
+          const account: Account | null = await Account.findOne({
+            where: { id: decode.id },
+          });
+
+          if (!account) {
+            res.status(401).json({ message: "Invalid refresh token" });
+            return;
+          }
+
+          if (account.token !== refreshToken) {
+            res.status(401).json({ message: "Invalid refresh token" });
+            return;
+          }
+
           const newAccessToken = sign_access(accountSign);
           res
             .cookie("refreshToken", refreshToken, {
@@ -54,18 +53,19 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
             .header("authorization", newAccessToken)
             .send({ message: "Refresh token successfully" });
         } catch (err: any) {
-          res.status(400).json({
-            message: "Invalid Token",
-            error: err.message,
-          });
+          res
+            .status(400)
+            .json({ message: "Invalid Token", error: err.message });
         }
       }
     } else {
       if (!refreshToken) {
         res.status(401).json({ message: "Access denied. No token provided" });
+        return;
       }
       try {
-        const accountSign = await handleTokens(refreshToken, true);
+        const decode = decode_refresh(refreshToken) as AccountDecode;
+        const accountSign: AccountSign = { id: decode.id, role: decode.role };
         const newAccessToken = sign_access(accountSign);
         res
           .cookie("refreshToken", refreshToken, {
@@ -75,30 +75,27 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
           .header("authorization", newAccessToken)
           .send({ message: "Refresh token successfully" });
       } catch (err: any) {
-        res.status(400).json({
-          message: "Invalid Token",
-          error: err.message,
-        });
+        res.status(400).json({ message: "Invalid Token", error: err.message });
       }
     }
   } catch (err: any) {
-    res.status(500).json({
-      message: "Could not validate token",
-      error: err.message,
-    });
+    const statusCode = res.statusCode === 200 ? 404 : res.statusCode;
+    res
+      .status(statusCode)
+      .json({ message: "Could not validate token", error: err.message });
   }
 }
 
 function isTeacher(req: Request, res: Response, next: NextFunction) {
-  // const user = req.user;
+  const user = req.user;
 
-  // if (!user || user.role !== ROLE.TEACHER) {
-  //   res.status(403).json({
-  //     message: "Access denied. Only lecturers can perform this action.",
-  //   });
-  // }
-
-  next(); // Continue to the next middleware or route handler
+  if (!user || user.role !== "TEACHER") {
+    res.status(403).json({
+      message: "Access denied. Only lecturers can perform this action.",
+    });
+    return;
+  }
+  next();
 }
 
 export { authenticate, isTeacher };

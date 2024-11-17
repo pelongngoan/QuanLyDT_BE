@@ -20,7 +20,7 @@ const Teacher_1 = require("../database/models/Teacher");
 function create_class(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { name, description, max_students, start_date, end_date, accountId } = req.body;
-        if (!name || !max_students || !start_date || !end_date || accountId) {
+        if (!name || !max_students || !start_date || !end_date || !accountId) {
             res.status(1002).json({ message: "Missing required fields." });
             return;
         }
@@ -36,8 +36,8 @@ function create_class(req, res) {
             // Create the new class with the correct teacherId
             const newClass = yield Class_1.Class.create({
                 teacherId: teacher.id, // Use teacher.id
-                name,
-                description,
+                className: name,
+                description: description,
                 maxStudents: max_students,
                 startDate: start_date,
                 endDate: end_date,
@@ -61,7 +61,7 @@ function edit_class(req, res) {
         }
         try {
             const classToUpdate = yield Class_1.Class.findOne({
-                where: { id: classId, accountId },
+                where: { id: classId, teacherId: accountId },
             });
             if (!classToUpdate) {
                 res.status(9994).json({
@@ -72,7 +72,6 @@ function edit_class(req, res) {
             // Update class fields
             yield classToUpdate.update({
                 className: name || classToUpdate.className,
-                // description: description || classToUpdate.description,
                 maxStudents: max_students || classToUpdate.maxStudents,
                 startDate: start_date || classToUpdate.startDate,
                 endDate: end_date || classToUpdate.endDate,

@@ -16,13 +16,13 @@ exports.edit_assignment = edit_assignment;
 exports.grade_assignment = grade_assignment;
 const Assignment_1 = require("../database/models/Assignment");
 const Submission_1 = require("../database/models/Submission");
-const Account_1 = require("../database/models/Account");
+const enum_1 = require("../database/enum/enum");
 function create_assignment(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
         const { classId, title, description, dueDate } = req.body;
         const userRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
-        if (userRole !== Account_1.ROLE.TEACHER) {
+        if (userRole !== enum_1.ROLE.TEACHER) {
             res.status(403).json({
                 message: "Access denied. Only teachers can create assignments.",
             });
@@ -51,7 +51,7 @@ function edit_assignment(req, res, next) {
         const { assignmentId, title, description, dueDate } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
-        if (userRole !== Account_1.ROLE.TEACHER) {
+        if (userRole !== enum_1.ROLE.TEACHER) {
             res
                 .status(403)
                 .json({ message: "Access denied. Only teachers can edit assignments." });
@@ -83,7 +83,7 @@ function delete_assignment(req, res, next) {
         const { assignmentId } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
-        if (userRole !== Account_1.ROLE.TEACHER) {
+        if (userRole !== enum_1.ROLE.TEACHER) {
             res.status(403).json({
                 message: "Access denied. Only teachers can delete assignments.",
             });
@@ -113,7 +113,7 @@ function submit_assignment(req, res, next) {
         const { assignmentId, fileUrl } = req.body;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const userRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
-        if (userRole !== Account_1.ROLE.STUDENT) {
+        if (userRole !== enum_1.ROLE.STUDENT) {
             res.status(403).json({
                 message: "Access denied. Only students can submit assignments.",
             });
@@ -140,7 +140,7 @@ function grade_assignment(req, res, next) {
         var _a;
         const { submissionId, grade } = req.body;
         const userRole = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
-        if (userRole !== Account_1.ROLE.TEACHER) {
+        if (userRole !== enum_1.ROLE.TEACHER) {
             res
                 .status(403)
                 .json({ message: "Access denied. Only teachers can grade assignments." });

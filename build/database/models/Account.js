@@ -1,20 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Account = exports.STATE = exports.ROLE = void 0;
+exports.Account = void 0;
 const sequelize_1 = require("sequelize");
 const db_1 = require("../db");
-var ROLE;
-(function (ROLE) {
-    ROLE["ADMIN"] = "admin";
-    ROLE["TEACHER"] = "teacher";
-    ROLE["STUDENT"] = "student";
-})(ROLE || (exports.ROLE = ROLE = {}));
-var STATE;
-(function (STATE) {
-    STATE["ACTIVE"] = "active";
-    STATE["LOCKED"] = "locked";
-    STATE["PENDING"] = "pending";
-})(STATE || (exports.STATE = STATE = {}));
+const enum_1 = require("../enum/enum");
 class Account extends sequelize_1.Model {
     static associate(models) {
         Account.hasMany(models.Notification, {
@@ -31,7 +20,7 @@ class Account extends sequelize_1.Model {
         });
     }
     isEmailVerified() {
-        return this.state === STATE.ACTIVE;
+        return this.state === enum_1.STATE.ACTIVE;
     }
 }
 exports.Account = Account;
@@ -46,14 +35,14 @@ exports.default = (sequelize) => {
         lastName: { type: sequelize_1.DataTypes.STRING(50), allowNull: true },
         email: { type: sequelize_1.DataTypes.STRING(100), allowNull: false, unique: true },
         role: {
-            type: sequelize_1.DataTypes.ENUM(...Object.values(ROLE)),
+            type: sequelize_1.DataTypes.ENUM(...Object.values(enum_1.ROLE)),
             allowNull: false,
         },
         password: { type: sequelize_1.DataTypes.STRING, allowNull: false },
         token: { type: sequelize_1.DataTypes.STRING, allowNull: true },
         state: {
-            type: sequelize_1.DataTypes.ENUM(...Object.values(STATE)),
-            defaultValue: STATE.PENDING,
+            type: sequelize_1.DataTypes.ENUM(...Object.values(enum_1.STATE)),
+            defaultValue: enum_1.STATE.PENDING,
         },
         verificationCode: { type: sequelize_1.DataTypes.STRING, allowNull: true },
         avatar: { type: sequelize_1.DataTypes.STRING, allowNull: true },

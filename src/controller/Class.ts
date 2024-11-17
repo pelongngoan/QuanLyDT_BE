@@ -5,7 +5,7 @@ import { Teacher } from "../database/models/Teacher";
 async function create_class(req: Request, res: Response) {
   const { name, description, max_students, start_date, end_date, accountId } =
     req.body;
-  if (!name || !max_students || !start_date || !end_date || accountId) {
+  if (!name || !max_students || !start_date || !end_date || !accountId) {
     res.status(1002).json({ message: "Missing required fields." });
     return;
   }
@@ -23,8 +23,8 @@ async function create_class(req: Request, res: Response) {
     // Create the new class with the correct teacherId
     const newClass = await Class.create({
       teacherId: teacher.id, // Use teacher.id
-      name,
-      description,
+      className: name,
+      description: description,
       maxStudents: max_students,
       startDate: start_date,
       endDate: end_date,
@@ -57,7 +57,7 @@ async function edit_class(req: Request, res: Response) {
 
   try {
     const classToUpdate = await Class.findOne({
-      where: { id: classId, accountId },
+      where: { id: classId, teacherId: accountId },
     });
 
     if (!classToUpdate) {
@@ -71,7 +71,6 @@ async function edit_class(req: Request, res: Response) {
     // Update class fields
     await classToUpdate.update({
       className: name || classToUpdate.className,
-      // description: description || classToUpdate.description,
       maxStudents: max_students || classToUpdate.maxStudents,
       startDate: start_date || classToUpdate.startDate,
       endDate: end_date || classToUpdate.endDate,

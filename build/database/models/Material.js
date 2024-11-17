@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Material = void 0;
 const sequelize_1 = require("sequelize");
+const Class_1 = require("./Class");
 class Material extends sequelize_1.Model {
     static associate(models) {
         Material.belongsTo(models.Class, {
@@ -33,6 +34,10 @@ exports.default = (sequelize) => {
         classId: {
             type: sequelize_1.DataTypes.UUID,
             allowNull: false,
+            references: {
+                model: Class_1.Class,
+                key: "id",
+            },
         },
     }, {
         sequelize,

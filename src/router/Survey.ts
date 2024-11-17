@@ -10,7 +10,7 @@ import {
 export const surveyRouter = Router();
 
 surveyRouter.post("/create_survey", create_survey);
-surveyRouter.put("/edit_survey", edit_survey);
-surveyRouter.delete("/delete_survey", delete_survey);
+surveyRouter.put("/edit_survey/:id", edit_survey);
+surveyRouter.delete("/delete_survey/:id", delete_survey);
 surveyRouter.post("/submit_survey", submit_survey);
-surveyRouter.get("/get_survey_responses", get_survey_responses);
+surveyRouter.get("/get_survey_responses/:id", get_survey_responses);

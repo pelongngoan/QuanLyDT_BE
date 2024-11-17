@@ -37,6 +37,8 @@ const uuid_1 = require("uuid");
 const validator_1 = __importDefault(require("validator"));
 const crypto_1 = __importDefault(require("crypto"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const jwt_1 = require("../utils/jwt");
+const enum_1 = require("../database/enum/enum");
 function signup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -59,7 +61,7 @@ function signup(req, res) {
                 email,
                 password: hashedPassword,
                 role,
-                state: Account_1.STATE.LOCKED,
+                state: enum_1.STATE.LOCKED,
                 id: (0, uuid_1.v4)(),
             });
             res.status(201).json({
@@ -101,25 +103,40 @@ function login(req, res) {
                 res.status(500).json({ message: "Internal server error." });
                 return;
             }
-            const token = jsonwebtoken_1.default.sign({ id: account.id, role: account.role }, secretKey, {
-                expiresIn: "1h",
+            const accountInfo = {
+                id: account.id,
+                role: account.role,
+            };
+            const accessToken = (0, jwt_1.sign_access)(accountInfo);
+            const refreshToken = (0, jwt_1.sign_refresh)(accountInfo);
+            account.set({
+                token: refreshToken,
             });
             let classList = [];
-            if (account.role === Account_1.ROLE.STUDENT) {
+            if (account.role === enum_1.ROLE.STUDENT) {
                 classList = yield getStudentClassList(account.id);
             }
-            else if (account.role === Account_1.ROLE.TEACHER) {
+            else if (account.role === enum_1.ROLE.TEACHER) {
                 classList = yield getLecturerClassList(account.id);
             }
-            res.status(200).json({
-                message: "Login successful!",
-                id: account.id,
-                token,
-                avatar: account.avatar,
-                active: account.state === Account_1.STATE.ACTIVE,
-                role: account.role,
-                class_list: classList,
+            res
+                .cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                sameSite: "strict",
+            })
+                .header("authorization", accessToken)
+                .send({
+                message: "Login successfully!",
+                account: account,
             });
+            // res.status(200).json({
+            //   message: "Login successful!",
+            //   id: account.id,
+            //   avatar: account.avatar,
+            //   active: account.state === STATE.ACTIVE,
+            //   role: account.role,
+            //   class_list: classList,
+            // });
         }
         catch (error) {
             console.error("Login error: ", error);
@@ -179,8 +196,8 @@ function check_verify_code(req, res) {
                 res.status(401).json({ message: "Invalid email or verification code." });
                 return;
             }
-            if (user.state === Account_1.STATE.LOCKED) {
-                yield Account_1.Account.update({ state: Account_1.STATE.ACTIVE }, { where: { email } });
+            if (user.state === enum_1.STATE.LOCKED) {
+                yield Account_1.Account.update({ state: enum_1.STATE.ACTIVE }, { where: { email } });
             }
             res.status(200).json({
                 message: "Verification successful!",
@@ -209,8 +226,11 @@ function changeInfoAfterSignup(req, res) {
                 res.status(500).json({ message: "Internal server error." });
                 return;
             }
+            (0, jwt_1.decode_refresh)(token);
             const decoded = jsonwebtoken_1.default.verify(token, secretKey);
+            console.log(decoded);
             const userId = decoded.id;
+            console.log(userId);
             const user = yield Account_1.Account.findOne({ where: { id: userId } });
             if (!user) {
                 res.status(404).json({ message: "User not found." });
@@ -224,7 +244,6 @@ function changeInfoAfterSignup(req, res) {
                 email: user.email,
                 avatar: user.avatar,
             });
-            return;
         }
         catch (error) {
             if (error.name === "JsonWebTokenError") {

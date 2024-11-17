@@ -1,11 +1,14 @@
 import { Request, Response } from "express";
-import { Account, ROLE, STATE } from "../database/models/Account";
+import { Account } from "../database/models/Account";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { decode_refresh, sign_access, sign_refresh } from "../utils/jwt";
+import { AccountSign } from "../types";
+import { ROLE, STATE } from "../database/enum/enum";
 
 async function signup(req: Request, res: Response) {
   try {
@@ -79,9 +82,15 @@ async function login(req: Request, res: Response) {
       res.status(500).json({ message: "Internal server error." });
       return;
     }
+    const accountInfo: AccountSign = {
+      id: account.id,
+      role: account.role,
+    };
 
-    const token = jwt.sign({ id: account.id, role: account.role }, secretKey, {
-      expiresIn: "1h",
+    const accessToken = sign_access(accountInfo);
+    const refreshToken = sign_refresh(accountInfo);
+    account.set({
+      token: refreshToken,
     });
 
     let classList = [];
@@ -90,16 +99,25 @@ async function login(req: Request, res: Response) {
     } else if (account.role === ROLE.TEACHER) {
       classList = await getLecturerClassList(account.id);
     }
+    res
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      })
+      .header("authorization", accessToken)
+      .send({
+        message: "Login successfully!",
+        account: account,
+      });
 
-    res.status(200).json({
-      message: "Login successful!",
-      id: account.id,
-      token,
-      avatar: account.avatar,
-      active: account.state === STATE.ACTIVE,
-      role: account.role,
-      class_list: classList,
-    });
+    // res.status(200).json({
+    //   message: "Login successful!",
+    //   id: account.id,
+    //   avatar: account.avatar,
+    //   active: account.state === STATE.ACTIVE,
+    //   role: account.role,
+    //   class_list: classList,
+    // });
   } catch (error) {
     console.error("Login error: ", error);
     res.status(500).json({ message: "Server error." });
@@ -191,9 +209,12 @@ async function changeInfoAfterSignup(req: Request, res: Response) {
       res.status(500).json({ message: "Internal server error." });
       return;
     }
-
+    decode_refresh(token);
     const decoded: any = jwt.verify(token, secretKey);
+    console.log(decoded);
+
     const userId = decoded.id;
+    console.log(userId);
 
     const user = await Account.findOne({ where: { id: userId } });
 
@@ -211,7 +232,6 @@ async function changeInfoAfterSignup(req: Request, res: Response) {
       email: user.email,
       avatar: user.avatar,
     });
-    return;
   } catch (error: any) {
     if (error.name === "JsonWebTokenError") {
       res.status(401).json({ message: "Invalid token." });

@@ -9,4 +9,5 @@ exports.authRoutes.post("/signup", Auth_1.signup);
 exports.authRoutes.post("/logout", Auth_1.logout);
 exports.authRoutes.post("/get_verify_code", Auth_1.get_verify_code);
 exports.authRoutes.post("/check_verify_code", Auth_1.check_verify_code);
+exports.authRoutes.post("/change_info_after_signup", Auth_1.changeInfoAfterSignup);
 // authRoutes.get("/me", authenticate, auth);

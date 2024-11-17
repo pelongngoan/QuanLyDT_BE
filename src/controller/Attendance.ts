@@ -1,19 +1,30 @@
 import { Request, Response } from "express";
 import { Attendance } from "../database/models/Attendance";
+import { Session } from "../database/models/Session";
+import { Student } from "../database/models/Student";
 
+// Record attendance
 async function take_attendance(req: Request, res: Response) {
-  const { classId, studentId, status, date } = req.body;
+  const { sessionId, studentId, status, date } = req.body;
 
-  if (!classId || !studentId || !status || !date) {
+  if (!sessionId || !studentId || !status || !date) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
+    // Ensure the session and student exist
+    const sessionExists = await Session.findByPk(sessionId);
+    const studentExists = await Student.findByPk(studentId);
+    if (!sessionExists || !studentExists) {
+      res.status(404).json({ message: "Session or student not found." });
+      return;
+    }
+
     const attendanceRecord = await Attendance.create({
-      classId,
+      sessionId,
       studentId,
-      status,
+      isPresent: status.toLowerCase() === "present",
       date,
     });
 
@@ -26,17 +37,19 @@ async function take_attendance(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
-async function get_attendance_record(req: Request, res: Response) {
-  const { classId, studentId, date } = req.query;
 
-  if (!classId || !studentId || !date) {
+// Retrieve a specific attendance record
+async function get_attendance_record(req: Request, res: Response) {
+  const { sessionId, studentId, date } = req.query;
+
+  if (!sessionId || !studentId || !date) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
     const attendanceRecord = await Attendance.findOne({
-      where: { classId, studentId, date },
+      where: { sessionId, studentId, date },
     });
 
     if (!attendanceRecord) {
@@ -50,17 +63,19 @@ async function get_attendance_record(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
-async function set_attendance_status(req: Request, res: Response) {
-  const { classId, studentId, date, status } = req.body;
 
-  if (!classId || !studentId || !date || !status) {
+// Update attendance status
+async function set_attendance_status(req: Request, res: Response) {
+  const { sessionId, studentId, date, status } = req.body;
+
+  if (!sessionId || !studentId || !date || !status) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
     const attendanceRecord = await Attendance.findOne({
-      where: { classId, studentId, date },
+      where: { sessionId, studentId, date },
     });
 
     if (!attendanceRecord) {
@@ -68,7 +83,7 @@ async function set_attendance_status(req: Request, res: Response) {
       return;
     }
 
-    attendanceRecord.isPresent = status;
+    attendanceRecord.isPresent = status.toLowerCase() === "present";
     await attendanceRecord.save();
 
     res.status(200).json({
@@ -80,17 +95,19 @@ async function set_attendance_status(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
-async function get_attendance_list(req: Request, res: Response) {
-  const { classId, date } = req.query;
 
-  if (!classId || !date) {
+// Get all attendance records for a specific session and date
+async function get_attendance_list(req: Request, res: Response) {
+  const { sessionId, date } = req.query;
+
+  if (!sessionId || !date) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
     const attendanceList = await Attendance.findAll({
-      where: { classId, date },
+      where: { sessionId, date },
     });
 
     if (attendanceList.length === 0) {
@@ -106,6 +123,7 @@ async function get_attendance_list(req: Request, res: Response) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
 export {
   get_attendance_list,
   get_attendance_record,

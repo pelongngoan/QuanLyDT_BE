@@ -13,18 +13,28 @@ exports.get_absence_requests = get_absence_requests;
 exports.request_absence = request_absence;
 exports.review_absence_request = review_absence_request;
 const LeaveRequest_1 = require("../database/models/LeaveRequest");
+const Student_1 = require("../database/models/Student");
+const Class_1 = require("../database/models/Class");
+// Submit absence request
 function request_absence(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { userId, classId, date, reason } = req.body;
-        if (!userId || !classId || !date || !reason) {
+        const { studentId, classId, startDate, endDate, reason } = req.body;
+        if (!studentId || !classId || !startDate || !endDate || !reason) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
+            const studentExists = yield Student_1.Student.findByPk(studentId);
+            const classExists = yield Class_1.Class.findByPk(classId);
+            if (!studentExists || !classExists) {
+                res.status(404).json({ message: "Student or class not found." });
+                return;
+            }
             const absenceRequest = yield LeaveRequest_1.LeaveRequest.create({
-                userId,
+                studentId,
                 classId,
-                date,
+                startDate,
+                endDate,
                 reason,
                 status: "PENDING", // Initial status
             });
@@ -39,6 +49,7 @@ function request_absence(req, res) {
         }
     });
 }
+// Review and update absence request status
 function review_absence_request(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { requestId, status } = req.body;
@@ -56,7 +67,7 @@ function review_absence_request(req, res) {
                 res.status(404).json({ message: "Absence request not found." });
                 return;
             }
-            absenceRequest.update({ status });
+            yield absenceRequest.update({ status });
             res.status(200).json({
                 message: "Absence request reviewed successfully.",
                 absenceRequest,
@@ -68,9 +79,10 @@ function review_absence_request(req, res) {
         }
     });
 }
+// Get all absence requests for a specific class
 function get_absence_requests(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId } = req.body;
+        const { classId } = req.query;
         if (!classId) {
             res.status(400).json({ message: "Class ID is required." });
             return;

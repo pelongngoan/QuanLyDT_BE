@@ -1,17 +1,6 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
 import { sequelizeConnection } from "../db";
-
-export enum ROLE {
-  ADMIN = "admin",
-  TEACHER = "teacher",
-  STUDENT = "student",
-}
-
-export enum STATE {
-  ACTIVE = "active",
-  LOCKED = "locked",
-  PENDING = "pending",
-}
+import { ROLE, STATE } from "../enum/enum";
 
 export class Account extends Model {
   declare id: string;

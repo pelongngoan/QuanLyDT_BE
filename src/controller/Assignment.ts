@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Assignment } from "../database/models/Assignment";
 import { Submission } from "../database/models/Submission";
-import { ROLE } from "../database/models/Account";
+import { ROLE } from "../database/enum/enum";
 
 async function create_assignment(
   req: Request,

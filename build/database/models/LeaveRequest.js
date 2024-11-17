@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LeaveRequest = void 0;
 const sequelize_1 = require("sequelize");
+const Student_1 = require("./Student");
+const Class_1 = require("./Class");
 class LeaveRequest extends sequelize_1.Model {
     static associate(models) {
         LeaveRequest.belongsTo(models.Student, {
@@ -25,10 +27,18 @@ exports.default = (sequelize) => {
         studentId: {
             type: sequelize_1.DataTypes.UUID,
             allowNull: false,
+            references: {
+                model: Student_1.Student,
+                key: "id",
+            },
         },
         classId: {
             type: sequelize_1.DataTypes.UUID,
             allowNull: false,
+            references: {
+                model: Class_1.Class,
+                key: "id",
+            },
         },
         startDate: {
             type: sequelize_1.DataTypes.DATE,
@@ -43,9 +53,9 @@ exports.default = (sequelize) => {
             allowNull: false,
         },
         status: {
-            type: sequelize_1.DataTypes.STRING(20),
+            type: sequelize_1.DataTypes.ENUM("PENDING", "APPROVED", "DENIED"),
             allowNull: false,
-            defaultValue: "pending",
+            defaultValue: "PENDING",
         },
     }, {
         sequelize,

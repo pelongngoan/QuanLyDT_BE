@@ -1,5 +1,5 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
-import { sequelizeConnection } from "../db";
+import { Class } from "./Class";
 
 export class Material extends Model {
   declare id: string;
@@ -39,6 +39,10 @@ export default (sequelize: Sequelize) => {
       classId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: Class,
+          key: "id",
+        },
       },
     },
     {

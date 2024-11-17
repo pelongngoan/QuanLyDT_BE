@@ -1,4 +1,6 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
+import { Student } from "./Student";
+import { Class } from "./Class";
 import { sequelizeConnection } from "../db";
 
 export class LeaveRequest extends Model {
@@ -8,7 +10,7 @@ export class LeaveRequest extends Model {
   declare startDate: Date;
   declare endDate: Date;
   declare reason: string;
-  declare status: string;
+  declare status: "PENDING" | "APPROVED" | "DENIED";
 
   static associate(models: any) {
     LeaveRequest.belongsTo(models.Student, {
@@ -33,10 +35,18 @@ export default (sequelize: Sequelize) => {
       studentId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: Student,
+          key: "id",
+        },
       },
       classId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: Class,
+          key: "id",
+        },
       },
       startDate: {
         type: DataTypes.DATE,
@@ -51,9 +61,9 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.ENUM("PENDING", "APPROVED", "DENIED"),
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: "PENDING",
       },
     },
     {

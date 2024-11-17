@@ -1,16 +1,20 @@
 import { Request, Response, NextFunction } from "express";
-import { Account, ROLE, STATE } from "../database/models/Account";
+import { Account } from "../database/models/Account";
 import { Class } from "../database/models/Class";
 import { Notification } from "../database/models/Notification";
 import { Message } from "../database/models/Message";
+import { ROLE, STATE } from "../database/enum/enum";
 
 async function getUserInfo(req: Request, res: Response, next: NextFunction) {
-  const userId = req.user?.id;
+  const userId = req.params.id;
+  console.log("alo:" + req.params.id);
 
   try {
+    console.log(userId);
+
     const user = await Account.findOne({
       where: { id: userId },
-      include: [Notification, Message],
+      // include: [Notification, Message],
     });
     if (!user) {
       res.status(404).json({ message: "User not found." });
@@ -27,6 +31,8 @@ async function getUserInfo(req: Request, res: Response, next: NextFunction) {
 async function setUserInfo(req: Request, res: Response, next: NextFunction) {
   const userId = req.user?.id;
   const { firstName, lastName, avatar } = req.body;
+  console.log(firstName);
+  console.log(lastName);
 
   try {
     const user = await Account.findOne({ where: { id: userId } });
@@ -63,8 +69,10 @@ async function getUserClasses(req: Request, res: Response, next: NextFunction) {
 
 // Set user role (admin-only)
 async function setUserRole(req: Request, res: Response, next: NextFunction) {
+  console.log("adminRole");
   const adminRole = req.user?.role;
   const { userId, role } = req.body;
+  console.log(adminRole);
 
   if (adminRole !== ROLE.ADMIN) {
     res

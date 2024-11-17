@@ -11,45 +11,46 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticate = authenticate;
 exports.isTeacher = isTeacher;
-const jwt_1 = require("../utils/jwt");
+const jwt_1 = require("../utils/jwt"); // Only keep necessary imports
 const Account_1 = require("../database/models/Account");
-// import { ROLE } from "../database/enum/enum";
 function authenticate(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
-            const accessToken = req.headers["authorization"];
+            const accessToken = (_a = req.headers["authorization"]) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
             const refreshToken = req.cookies["refreshToken"];
-            const handleTokens = (token, isRefresh) => __awaiter(this, void 0, void 0, function* () {
-                const decode = isRefresh ? (0, jwt_1.decode_refresh)(token) : (0, jwt_1.decode_access)(token);
-                if (typeof decode === "string") {
-                    throw new Error("Invalid token format");
-                }
-                const accountSign = {
-                    id: decode.id,
-                    role: decode.role,
-                };
-                const account = yield Account_1.Account.findOne({ where: { id: decode.id } });
-                if (!account) {
-                    throw new Error("Account not found");
-                }
-                if (isRefresh && account.token !== token) {
-                    throw new Error("Invalid refresh token");
-                }
-                return accountSign;
-            });
+            console.log("accessToken: " + accessToken);
+            console.log("refreshToken: " + refreshToken);
             if (accessToken) {
                 try {
-                    const accountSign = yield handleTokens(accessToken, false);
-                    // req.user = accountSign; // Attach user info to the request
-                    next(); // Call next() to proceed to the next middleware
+                    const decode = (0, jwt_1.decode_access)(accessToken);
+                    res.locals.id = decode.id;
+                    res.locals.role = decode.role;
+                    req.user = { id: decode.id, role: decode.role };
+                    next();
                 }
                 catch (err) {
+                    console.error("Error decoding access token: ", err);
                     if (!refreshToken) {
                         res.status(401).json({ message: "Access denied. No token provided" });
+                        return;
                     }
-                    // Handle refresh token logic
                     try {
-                        const accountSign = yield handleTokens(refreshToken, true);
+                        console.log("Attempting to decode refresh token...");
+                        const decode = (0, jwt_1.decode_refresh)(refreshToken);
+                        console.log(decode);
+                        const accountSign = { id: decode.id, role: decode.role };
+                        const account = yield Account_1.Account.findOne({
+                            where: { id: decode.id },
+                        });
+                        if (!account) {
+                            res.status(401).json({ message: "Invalid refresh token" });
+                            return;
+                        }
+                        if (account.token !== refreshToken) {
+                            res.status(401).json({ message: "Invalid refresh token" });
+                            return;
+                        }
                         const newAccessToken = (0, jwt_1.sign_access)(accountSign);
                         res
                             .cookie("refreshToken", refreshToken, {
@@ -60,19 +61,20 @@ function authenticate(req, res, next) {
                             .send({ message: "Refresh token successfully" });
                     }
                     catch (err) {
-                        res.status(400).json({
-                            message: "Invalid Token",
-                            error: err.message,
-                        });
+                        res
+                            .status(400)
+                            .json({ message: "Invalid Token", error: err.message });
                     }
                 }
             }
             else {
                 if (!refreshToken) {
                     res.status(401).json({ message: "Access denied. No token provided" });
+                    return;
                 }
                 try {
-                    const accountSign = yield handleTokens(refreshToken, true);
+                    const decode = (0, jwt_1.decode_refresh)(refreshToken);
+                    const accountSign = { id: decode.id, role: decode.role };
                     const newAccessToken = (0, jwt_1.sign_access)(accountSign);
                     res
                         .cookie("refreshToken", refreshToken, {
@@ -83,27 +85,25 @@ function authenticate(req, res, next) {
                         .send({ message: "Refresh token successfully" });
                 }
                 catch (err) {
-                    res.status(400).json({
-                        message: "Invalid Token",
-                        error: err.message,
-                    });
+                    res.status(400).json({ message: "Invalid Token", error: err.message });
                 }
             }
         }
         catch (err) {
-            res.status(500).json({
-                message: "Could not validate token",
-                error: err.message,
-            });
+            const statusCode = res.statusCode === 200 ? 404 : res.statusCode;
+            res
+                .status(statusCode)
+                .json({ message: "Could not validate token", error: err.message });
         }
     });
 }
 function isTeacher(req, res, next) {
-    // const user = req.user;
-    // if (!user || user.role !== ROLE.TEACHER) {
-    //   res.status(403).json({
-    //     message: "Access denied. Only lecturers can perform this action.",
-    //   });
-    // }
-    next(); // Continue to the next middleware or route handler
+    const user = req.user;
+    if (!user || user.role !== "TEACHER") {
+        res.status(403).json({
+            message: "Access denied. Only lecturers can perform this action.",
+        });
+        return;
+    }
+    next();
 }
