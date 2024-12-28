@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignmentRoutes = void 0;
+exports.attendanceRoutes = void 0;
 const express_1 = require("express");
 const Attendance_1 = require("../controller/Attendance");
 const auth_1 = require("../middleware/auth");
-exports.assignmentRoutes = (0, express_1.Router)();
-exports.assignmentRoutes.get("/get_attendance_list/:id", auth_1.authenticate, Attendance_1.get_attendance_list);
-exports.assignmentRoutes.get("/get_attendance_record/:id", auth_1.authenticate, Attendance_1.get_attendance_record);
-exports.assignmentRoutes.put("/set_attendance_status/:id", auth_1.authenticate, Attendance_1.set_attendance_status);
-exports.assignmentRoutes.post("/take_attendance", auth_1.authenticate, Attendance_1.take_attendance);
+exports.attendanceRoutes = (0, express_1.Router)();
+exports.attendanceRoutes.get("/get_attendance_list/:sessionId", auth_1.authenticate, Attendance_1.get_attendance_list);
+exports.attendanceRoutes.get("/get_attendance_record/:attendanceId", auth_1.authenticate, Attendance_1.get_attendance_record);
+exports.attendanceRoutes.put("/set_attendance_status/:attendanceId", auth_1.authenticate, Attendance_1.set_attendance_status);
+exports.attendanceRoutes.post("/take_attendance", auth_1.authenticate, Attendance_1.take_attendance);

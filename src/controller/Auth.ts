@@ -14,7 +14,7 @@ import { Student } from "../database/models/Student";
 
 async function signup(req: Request, res: Response) {
   try {
-    const { email, password, role, firstName, lastName } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
       res
@@ -56,8 +56,6 @@ async function signup(req: Request, res: Response) {
     // Create a new account
     const newAccount = await Account.create({
       id: uuidv4(),
-      firstName: firstName || null,
-      lastName: lastName || null,
       email,
       password: hashedPassword,
       role,

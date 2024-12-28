@@ -91,16 +91,30 @@ async function delete_assignment(
     const assignment = await Assignment.findOne({
       where: { id: assignmentId },
     });
+
     if (!assignment) {
       res.status(404).json({
-        message:
-          "Assignment not found or you do not have permission to delete this assignment.",
+        message: "Assignment not found.",
       });
       return;
     }
 
+    // Delete associated submissions
+    await Submission.destroy({
+      where: { assignmentId },
+    });
+
+    // Delete associated grades
+    await Grade.destroy({
+      where: { assignmentId },
+    });
+
+    // Delete the assignment
     await assignment.destroy();
-    res.status(200).json({ message: "Assignment deleted successfully!" });
+
+    res.status(200).json({
+      message: "Assignment and its associations deleted successfully!",
+    });
   } catch (error) {
     next(error);
   }

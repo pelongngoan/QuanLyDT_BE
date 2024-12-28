@@ -7,21 +7,21 @@ import {
 } from "../controller/Attendance";
 import { authenticate } from "../middleware/auth";
 
-export const assignmentRoutes = Router();
+export const attendanceRoutes = Router();
 
-assignmentRoutes.get(
-  "/get_attendance_list/:id",
+attendanceRoutes.get(
+  "/get_attendance_list/:sessionId",
   authenticate,
   get_attendance_list
 );
-assignmentRoutes.get(
-  "/get_attendance_record/:id",
+attendanceRoutes.get(
+  "/get_attendance_record/:attendanceId",
   authenticate,
   get_attendance_record
 );
-assignmentRoutes.put(
-  "/set_attendance_status/:id",
+attendanceRoutes.put(
+  "/set_attendance_status/:attendanceId",
   authenticate,
   set_attendance_status
 );
-assignmentRoutes.post("/take_attendance", authenticate, take_attendance);
+attendanceRoutes.post("/take_attendance", authenticate, take_attendance);

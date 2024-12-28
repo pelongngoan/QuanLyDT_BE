@@ -41,7 +41,7 @@ exports.sequelizeConnection = void 0;
 const sequelize_1 = require("sequelize");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const sequelizeConnection = new sequelize_1.Sequelize(process.env.DB_NAME || "qldt", process.env.DB_USERNAME || "root", process.env.DB_PASSWORD || "Pelongvipd2112!", {
+const sequelizeConnection = new sequelize_1.Sequelize(process.env.DB_NAME || "", process.env.DB_USERNAME || "", process.env.DB_PASSWORD || "", {
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT || "3306"),
     // logging: console.log, // Enable logging

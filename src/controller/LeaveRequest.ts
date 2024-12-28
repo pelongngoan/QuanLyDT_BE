@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { request, Request, Response } from "express";
 import { LeaveRequest } from "../database/models/LeaveRequest";
 import { Student } from "../database/models/Student";
 import { Class } from "../database/models/Class";
@@ -42,9 +42,10 @@ async function request_absence(req: Request, res: Response) {
 
 // Review and update absence request status
 async function review_absence_request(req: Request, res: Response) {
-  const { requestId, status } = req.body;
+  const { absenceId } = req.params;
+  const { status } = req.body;
 
-  if (!requestId || !status) {
+  if (!status) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
@@ -55,7 +56,7 @@ async function review_absence_request(req: Request, res: Response) {
   }
 
   try {
-    const absenceRequest = await LeaveRequest.findByPk(requestId);
+    const absenceRequest = await LeaveRequest.findByPk(absenceId);
 
     if (!absenceRequest) {
       res.status(404).json({ message: "Absence request not found." });
@@ -74,8 +75,8 @@ async function review_absence_request(req: Request, res: Response) {
 }
 
 // Get all absence requests for a specific class
-async function get_absence_requests(req: Request, res: Response) {
-  const { classId } = req.query;
+async function getAllAbsenceByClassId(req: Request, res: Response) {
+  const { classId } = req.params;
 
   if (!classId) {
     res.status(400).json({ message: "Class ID is required." });
@@ -94,4 +95,29 @@ async function get_absence_requests(req: Request, res: Response) {
   }
 }
 
-export { get_absence_requests, request_absence, review_absence_request };
+async function getAbsenceById(req: Request, res: Response) {
+  const { absenceId } = req.params;
+
+  if (!absenceId) {
+    res.status(400).json({ message: "Class ID is required." });
+    return;
+  }
+
+  try {
+    const absenceRequests = await LeaveRequest.findOne({
+      where: { id: absenceId },
+    });
+
+    res.status(200).json({ absenceRequests });
+  } catch (error) {
+    console.error("Error fetching absence requests: ", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+export {
+  getAllAbsenceByClassId,
+  request_absence,
+  review_absence_request,
+  getAbsenceById,
+};

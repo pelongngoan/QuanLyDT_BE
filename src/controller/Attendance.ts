@@ -5,9 +5,9 @@ import { Student } from "../database/models/Student";
 
 // Record attendance
 async function take_attendance(req: Request, res: Response) {
-  const { sessionId, studentId, status, date } = req.body;
+  const { sessionId, studentId, isPresent, date } = req.body;
 
-  if (!sessionId || !studentId || !status || !date) {
+  if (!sessionId || !studentId || typeof isPresent !== "boolean" || !date) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
@@ -24,7 +24,7 @@ async function take_attendance(req: Request, res: Response) {
     const attendanceRecord = await Attendance.create({
       sessionId,
       studentId,
-      isPresent: status.toLowerCase() === "present",
+      isPresent,
       date,
     });
 
@@ -40,16 +40,11 @@ async function take_attendance(req: Request, res: Response) {
 
 // Retrieve a specific attendance record
 async function get_attendance_record(req: Request, res: Response) {
-  const { sessionId, studentId, date } = req.query;
-
-  if (!sessionId || !studentId || !date) {
-    res.status(400).json({ message: "Missing required fields." });
-    return;
-  }
+  const { attendanceId } = req.params; // Use params to get the classId from the URL
 
   try {
     const attendanceRecord = await Attendance.findOne({
-      where: { sessionId, studentId, date },
+      where: { id: attendanceId },
     });
 
     if (!attendanceRecord) {
@@ -66,16 +61,17 @@ async function get_attendance_record(req: Request, res: Response) {
 
 // Update attendance status
 async function set_attendance_status(req: Request, res: Response) {
-  const { sessionId, studentId, date, status } = req.body;
+  const { isPresent } = req.body;
+  const { attendanceId } = req.params; // Use params to get the classId from the URL
 
-  if (!sessionId || !studentId || !date || !status) {
+  if (typeof isPresent !== "boolean") {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
     const attendanceRecord = await Attendance.findOne({
-      where: { sessionId, studentId, date },
+      where: { id: attendanceId },
     });
 
     if (!attendanceRecord) {
@@ -83,7 +79,7 @@ async function set_attendance_status(req: Request, res: Response) {
       return;
     }
 
-    attendanceRecord.isPresent = status.toLowerCase() === "present";
+    attendanceRecord.isPresent = isPresent;
     await attendanceRecord.save();
 
     res.status(200).json({
@@ -98,16 +94,11 @@ async function set_attendance_status(req: Request, res: Response) {
 
 // Get all attendance records for a specific session and date
 async function get_attendance_list(req: Request, res: Response) {
-  const { sessionId, date } = req.query;
-
-  if (!sessionId || !date) {
-    res.status(400).json({ message: "Missing required fields." });
-    return;
-  }
+  const { sessionId } = req.params;
 
   try {
     const attendanceList = await Attendance.findAll({
-      where: { sessionId, date },
+      where: { sessionId },
     });
 
     if (attendanceList.length === 0) {

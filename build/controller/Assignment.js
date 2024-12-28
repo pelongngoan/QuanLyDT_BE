@@ -98,12 +98,23 @@ function delete_assignment(req, res, next) {
             });
             if (!assignment) {
                 res.status(404).json({
-                    message: "Assignment not found or you do not have permission to delete this assignment.",
+                    message: "Assignment not found.",
                 });
                 return;
             }
+            // Delete associated submissions
+            yield Submission_1.Submission.destroy({
+                where: { assignmentId },
+            });
+            // Delete associated grades
+            yield Grade_1.Grade.destroy({
+                where: { assignmentId },
+            });
+            // Delete the assignment
             yield assignment.destroy();
-            res.status(200).json({ message: "Assignment deleted successfully!" });
+            res.status(200).json({
+                message: "Assignment and its associations deleted successfully!",
+            });
         }
         catch (error) {
             next(error);

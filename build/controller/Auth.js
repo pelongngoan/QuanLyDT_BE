@@ -44,7 +44,7 @@ const Student_1 = require("../database/models/Student");
 function signup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { email, password, role, firstName, lastName } = req.body;
+            const { email, password, role } = req.body;
             if (!email || !password || !role) {
                 res
                     .status(400)
@@ -77,8 +77,6 @@ function signup(req, res) {
             // Create a new account
             const newAccount = yield Account_1.Account.create({
                 id: (0, uuid_1.v4)(),
-                firstName: firstName || null,
-                lastName: lastName || null,
                 email,
                 password: hashedPassword,
                 role,

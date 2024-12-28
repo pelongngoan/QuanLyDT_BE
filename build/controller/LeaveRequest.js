@@ -9,9 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.get_absence_requests = get_absence_requests;
+exports.getAllAbsenceByClassId = getAllAbsenceByClassId;
 exports.request_absence = request_absence;
 exports.review_absence_request = review_absence_request;
+exports.getAbsenceById = getAbsenceById;
 const LeaveRequest_1 = require("../database/models/LeaveRequest");
 const Student_1 = require("../database/models/Student");
 const Class_1 = require("../database/models/Class");
@@ -52,8 +53,9 @@ function request_absence(req, res) {
 // Review and update absence request status
 function review_absence_request(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { requestId, status } = req.body;
-        if (!requestId || !status) {
+        const { absenceId } = req.params;
+        const { status } = req.body;
+        if (!status) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
@@ -62,7 +64,7 @@ function review_absence_request(req, res) {
             return;
         }
         try {
-            const absenceRequest = yield LeaveRequest_1.LeaveRequest.findByPk(requestId);
+            const absenceRequest = yield LeaveRequest_1.LeaveRequest.findByPk(absenceId);
             if (!absenceRequest) {
                 res.status(404).json({ message: "Absence request not found." });
                 return;
@@ -80,9 +82,9 @@ function review_absence_request(req, res) {
     });
 }
 // Get all absence requests for a specific class
-function get_absence_requests(req, res) {
+function getAllAbsenceByClassId(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId } = req.query;
+        const { classId } = req.params;
         if (!classId) {
             res.status(400).json({ message: "Class ID is required." });
             return;
@@ -90,6 +92,25 @@ function get_absence_requests(req, res) {
         try {
             const absenceRequests = yield LeaveRequest_1.LeaveRequest.findAll({
                 where: { classId },
+            });
+            res.status(200).json({ absenceRequests });
+        }
+        catch (error) {
+            console.error("Error fetching absence requests: ", error);
+            res.status(500).json({ message: "Internal server error." });
+        }
+    });
+}
+function getAbsenceById(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { absenceId } = req.params;
+        if (!absenceId) {
+            res.status(400).json({ message: "Class ID is required." });
+            return;
+        }
+        try {
+            const absenceRequests = yield LeaveRequest_1.LeaveRequest.findOne({
+                where: { id: absenceId },
             });
             res.status(200).json({ absenceRequests });
         }
