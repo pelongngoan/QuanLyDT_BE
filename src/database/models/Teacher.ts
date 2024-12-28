@@ -1,59 +1,49 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
+import { Account } from "./Account";
 import { sequelizeConnection } from "../db";
 
-class Teacher extends Model {
+export class Teacher extends Model {
   declare id: string;
   declare accountId: string;
-  declare classList: string[]; // Array of class IDs
-  declare assignmentsCreated: string[]; // Array of created assignment IDs
+  declare specialization: string | null;
+  declare bio: string | null;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Teacher.belongsTo(models.Account, {
+      foreignKey: "accountId",
+      onDelete: "CASCADE",
+    });
+    Teacher.hasMany(models.Class, {
+      foreignKey: "teacherId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-Teacher.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    accountId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "Account", // Reference to Account model
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Teacher.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
-      onDelete: "CASCADE",
+      accountId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Account,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      specialization: { type: DataTypes.STRING(100), allowNull: true },
+      bio: { type: DataTypes.TEXT, allowNull: true },
     },
-    classList: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: true,
-      defaultValue: [],
-    },
-    assignmentsCreated: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: true,
-      defaultValue: [],
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Teacher",
-    timestamps: true,
-    charset: "utf8",
-  }
-);
+    {
+      sequelize,
 
-export { Teacher };
+      modelName: "Teacher",
+    }
+  );
+  return Teacher;
+};

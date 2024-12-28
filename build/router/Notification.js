@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const Notification_1 = require("../controller/Notification");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.post("/send", auth_1.authenticate, Notification_1.send_notification);
+router.get("/get/:id", auth_1.authenticate, Notification_1.get_notifications);
+router.put("/mark_as_read/:id", auth_1.authenticate, Notification_1.mark_notification_as_read);
+router.get("/conversation/:id", auth_1.authenticate, Notification_1.get_conversation);
+router.get("/conversations/:id", auth_1.authenticate, Notification_1.get_list_conversation);
+router.delete("/delete_message/:id", auth_1.authenticate, Notification_1.delete_message);
+exports.default = router;

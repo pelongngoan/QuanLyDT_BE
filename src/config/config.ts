@@ -1,18 +1,28 @@
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import cors from "cors";
-import { NextFunction, Response, Router } from "express";
+import { Router } from "express";
 import { router } from "../router/index";
-import { Account } from "../database/models/Account";
-import { Student } from "../database/models/Student";
-import { Teacher } from "../database/models/Teacher";
-import { Class } from "../database/models/Class";
-import { Assignment } from "../database/models/Assignment";
-import { ActivityLog } from "../database/models/ActivityLog";
-import { Attendance } from "../database/models/Attendance";
-import { LeaveRequest } from "../database/models/LeaveRequest";
-import { Notification } from "../database/models/Notification";
-import { StudyMaterial } from "../database/models/StudyMaterial";
+import Teacher from "../database/models/Teacher";
+import Class from "../database/models/Class";
+import Assignment from "../database/models/Assignment";
+import LeaveRequest from "../database/models/LeaveRequest";
+import Material from "../database/models/Material";
+import Notification from "../database/models/Notification";
+import Student from "../database/models/Student";
+import Submission from "../database/models/Submission";
+import Survey from "../database/models/Survey";
+import SurveyResponse from "../database/models/SurveyResponse";
+import ClassStudent from "../database/models/ClassStudent";
+import Attendance from "../database/models/Attendance";
+import Event from "../database/models/Event";
+import Grade from "../database/models/Grade";
+import Resource from "../database/models/Resource";
+import Schedule from "../database/models/Schedule";
+import Session from "../database/models/Session";
+import Account from "../database/models/Account";
+import { sequelizeConnection } from "../database/db";
+import Message from "../database/models/Message";
 
 const corsOptions = {
   origin: true,
@@ -22,7 +32,7 @@ const corsOptions = {
 };
 
 export async function config(app: Router) {
-  await createDatabase();
+  await createDatabase(); // Sync the models after connection is established
   await app.use(cors(corsOptions));
   await app.use(bodyParser.json());
   await app.use(cookieParser());
@@ -30,14 +40,28 @@ export async function config(app: Router) {
 }
 
 async function createDatabase() {
-  await Account.sync({ alter: true });
-  // await Student.sync({ alter: true });
-  // await Teacher.sync({ alter: true });
-  // await Class.sync({ alter: true });
-  // await Assignment.sync({ alter: true });
-  // await ActivityLog.sync({ alter: true });
-  // await Attendance.sync({ alter: true });
-  // await LeaveRequest.sync({ alter: true });
-  // await Notification.sync({ alter: true });
-  // await StudyMaterial.sync({ alter: true });
+  try {
+    Account(sequelizeConnection);
+    Teacher(sequelizeConnection);
+    Student(sequelizeConnection);
+    Class(sequelizeConnection);
+    ClassStudent(sequelizeConnection);
+    Assignment(sequelizeConnection);
+    LeaveRequest(sequelizeConnection);
+    Material(sequelizeConnection);
+    Message(sequelizeConnection);
+    Notification(sequelizeConnection);
+    Submission(sequelizeConnection);
+    Session(sequelizeConnection);
+    Attendance(sequelizeConnection);
+    Event(sequelizeConnection);
+    Grade(sequelizeConnection);
+    Resource(sequelizeConnection);
+    Schedule(sequelizeConnection);
+    Survey(sequelizeConnection);
+    SurveyResponse(sequelizeConnection);
+    await sequelizeConnection.sync({ alter: true });
+  } catch (error) {
+    console.error("Database sync error:", error);
+  }
 }

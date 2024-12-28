@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.absenceRequestRoutes = void 0;
+const express_1 = require("express");
+const LeaveRequest_1 = require("../controller/LeaveRequest");
+const auth_1 = require("../middleware/auth");
+exports.absenceRequestRoutes = (0, express_1.Router)();
+exports.absenceRequestRoutes.post("/create", auth_1.authenticate, LeaveRequest_1.request_absence);
+exports.absenceRequestRoutes.get("/getAll/:classId", auth_1.authenticate, LeaveRequest_1.getAllAbsenceByClassId);
+exports.absenceRequestRoutes.get("/get/:absenceId", auth_1.authenticate, LeaveRequest_1.getAbsenceById);
+exports.absenceRequestRoutes.put("/update/:absenceId", auth_1.authenticate, LeaveRequest_1.review_absence_request);

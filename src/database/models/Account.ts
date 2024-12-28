@@ -1,101 +1,87 @@
-import { DataTypes, Model } from "sequelize";
-import { v4 as uuid } from "uuid";
+import { DataTypes, Model, Sequelize } from "sequelize";
 import { sequelizeConnection } from "../db";
 import { ROLE, STATE } from "../enum/enum";
 
-class Account extends Model {
+export class Account extends Model {
   declare id: string;
-  // declare firstName: string;
-  // declare lastName: string;
-  declare username: string;
+  declare firstName: string | null;
+  declare lastName: string | null;
   declare email: string;
-  declare role: string;
+  declare role: ROLE;
   declare password: string;
-  declare token: string;
-  declare state: string;
-  declare verificationCode: string;
-  declare avatar: string;
+  declare token: string | null;
+  declare state: STATE;
+  declare verificationCode: string | null;
+  declare avatar: string | null;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Account.hasMany(models.Notification, {
+      foreignKey: "userId",
+      onDelete: "CASCADE",
+    });
+    Account.hasMany(models.Message, {
+      foreignKey: "senderId",
+      onDelete: "CASCADE",
+    });
+    Account.hasMany(models.Message, {
+      foreignKey: "receiverId",
+      onDelete: "CASCADE",
+    });
+    Account.hasOne(models.Teacher, {
+      foreignKey: "accountId",
+      onDelete: "CASCADE",
+    });
+    Account.hasOne(models.Student, {
+      foreignKey: "accountId",
+      onDelete: "CASCADE",
+    });
+  }
+
+  // Helper Method: Check if email is verified
+  isEmailVerified(): boolean {
+    return this.state === STATE.ACTIVE;
+  }
+
+  // Helper Method: Generate a full name
+  getFullName(): string | null {
+    if (this.firstName && this.lastName) {
+      return `${this.firstName} ${this.lastName}`;
+    }
+    return null;
+  }
 }
 
-Account.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: () => uuid(),
-      primaryKey: true,
-    },
-    // firstName: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    // lastName: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true,
-        isSisHustEmail(value: string) {
-          if (!value.endsWith("@sis.hust.edu.vn")) {
-            throw new Error("Email must end with @sis.hust.edu.vn");
-          }
-        },
+export default (sequelize: Sequelize) => {
+  Account.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
+      firstName: { type: DataTypes.STRING(50), allowNull: true },
+      lastName: { type: DataTypes.STRING(50), allowNull: true },
+      email: { type: DataTypes.STRING(100), allowNull: false, unique: true },
+      role: {
+        type: DataTypes.ENUM(...Object.values(ROLE)),
+        allowNull: false,
+      },
+      password: { type: DataTypes.STRING, allowNull: false },
+      token: { type: DataTypes.STRING, allowNull: true },
+      state: {
+        type: DataTypes.ENUM(...Object.values(STATE)),
+        defaultValue: STATE.PENDING,
+        allowNull: false,
+      },
+      verificationCode: { type: DataTypes.STRING, allowNull: true },
+      avatar: { type: DataTypes.STRING, allowNull: true },
     },
-    role: {
-      type: DataTypes.ENUM,
-      values: [ROLE.ADMIN, ROLE.STUDENT, ROLE.TEACHER],
-      allowNull: false,
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    token: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    state: {
-      type: DataTypes.ENUM,
-      values: [STATE.ACTIVE, STATE.INACTIVE],
-      allowNull: false,
-      defaultValue: STATE.INACTIVE,
-    },
-    verificationCode: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    avatar: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Account",
-    timestamps: true,
-    charset: "utf8",
-  }
-);
+    {
+      sequelize: sequelizeConnection,
+      modelName: "Account",
+      timestamps: true, // Automatically adds `createdAt` and `updatedAt`
+    }
+  );
 
-export { Account };
+  return Account;
+};

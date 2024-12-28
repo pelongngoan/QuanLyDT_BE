@@ -1,63 +1,47 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
+import { Account } from "./Account";
 import { sequelizeConnection } from "../db";
 
-class Notification extends Model {
+export class Notification extends Model {
   declare id: string;
-  declare recipientId: string; // Student or Teacher ID
-  declare content: string;
+  declare message: string;
   declare type: string;
+  declare userId: string;
   declare isRead: boolean;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Notification.belongsTo(models.Account, {
+      foreignKey: "userId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-Notification.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    recipientId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "Account", // Assume notifications are for accounts (teachers and students)
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Notification.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
-      onDelete: "CASCADE",
+      message: { type: DataTypes.STRING(255), allowNull: false },
+      type: { type: DataTypes.STRING(50), allowNull: true },
+      userId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Account,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    type: {
-      type: DataTypes.ENUM("GENERAL", "REMINDER", "ALERT"),
-      allowNull: false,
-    },
-    isRead: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Notification",
-    timestamps: true,
-    charset: "utf8",
-  }
-);
+    {
+      sequelize,
 
-export { Notification };
+      modelName: "Notification",
+    }
+  );
+  return Notification;
+};

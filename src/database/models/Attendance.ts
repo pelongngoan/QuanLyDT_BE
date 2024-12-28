@@ -1,73 +1,65 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
+import { Student } from "./Student";
+import { Session } from "./Session";
 import { sequelizeConnection } from "../db";
 
-class Attendance extends Model {
+export class Attendance extends Model {
   declare id: string;
-  declare classId: string; // Reference to Class
+  declare sessionId: string;
+  declare studentId: string;
+  declare isPresent: boolean;
   declare date: Date;
-  declare studentList: { studentId: string; status: string }[]; // Array of attendance records
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Attendance.belongsTo(models.Session, {
+      foreignKey: "sessionId",
+      onDelete: "CASCADE",
+    });
+    Attendance.belongsTo(models.Student, {
+      foreignKey: "studentId",
+      onDelete: "CASCADE",
+    });
+  }
 }
 
-Attendance.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    classId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "Class",
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Attendance.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
-    },
-    date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    studentList: {
-      type: DataTypes.ARRAY(DataTypes.JSONB), // Store each student with status
-      allowNull: true,
-      defaultValue: [],
-      validate: {
-        isValidAttendance(value: { studentId: string; status: string }[]) {
-          value.forEach((item: { studentId: string; status: string }) => {
-            if (
-              ![
-                "PRESENT",
-                "ABSENT_WITH_LEAVE",
-                "ABSENT_WITHOUT_LEAVE",
-              ].includes(item.status)
-            ) {
-              throw new Error("Invalid attendance status");
-            }
-          });
+      sessionId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Session,
+          key: "id",
         },
+        allowNull: false,
+      },
+      studentId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Student,
+          key: "id",
+        },
+        allowNull: false,
+      },
+      isPresent: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
       },
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Attendance",
-    timestamps: true,
-    charset: "utf8",
-  }
-);
-
-export { Attendance };
+    {
+      sequelize,
+      modelName: "Attendance",
+    }
+  );
+  return Attendance;
+};

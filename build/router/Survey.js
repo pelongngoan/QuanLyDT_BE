@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.surveyRouter = void 0;
+const express_1 = require("express");
+const Survey_1 = require("../controller/Survey");
+exports.surveyRouter = (0, express_1.Router)();
+exports.surveyRouter.post("/create_survey", Survey_1.create_survey);
+exports.surveyRouter.put("/edit_survey/:id", Survey_1.edit_survey);
+exports.surveyRouter.delete("/delete_survey/:id", Survey_1.delete_survey);
+exports.surveyRouter.post("/submit_survey", Survey_1.submit_survey);
+exports.surveyRouter.get("/get_survey_responses/:id", Survey_1.get_survey_responses);

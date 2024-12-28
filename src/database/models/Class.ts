@@ -1,74 +1,59 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
+import { Teacher } from "./Teacher";
 import { sequelizeConnection } from "../db";
 
-class Class extends Model {
+export class Class extends Model {
   declare id: string;
-  declare name: string;
-  declare description: string;
-  declare teacherId: string; // Reference to the Teacher
-  declare studentList: string[]; // Array of student IDs
-  declare assignments: string[]; // Array of assignment IDs
-  declare schedule: string; // Schedule information
+  declare className: string;
+  declare semester: string;
+  declare maxStudents: number;
+  declare startDate: Date;
+  declare endDate: Date;
+  declare teacherId: string;
 
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  static associate(models: any) {
+    Class.belongsTo(models.Teacher, {
+      foreignKey: "teacherId",
+      onDelete: "CASCADE",
+    });
+    Class.belongsToMany(models.Student, {
+      through: "ClassStudents",
+      foreignKey: "classId",
+    });
+  }
 }
 
-Class.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    teacherId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "Teacher", // Reference to Teacher model
-        key: "id",
+export default (sequelize: Sequelize) => {
+  Class.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
       },
-      onDelete: "SET NULL",
+      className: { type: DataTypes.STRING(100), allowNull: false },
+      semester: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        defaultValue: "N/A",
+      },
+      maxStudents: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+      startDate: { type: DataTypes.DATE, allowNull: false },
+      endDate: { type: DataTypes.DATE, allowNull: false },
+      teacherId: {
+        type: DataTypes.UUID,
+        references: {
+          model: Teacher,
+          key: "id",
+        },
+        allowNull: false,
+      },
     },
-    studentList: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: true,
-      defaultValue: [],
-    },
-    assignments: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: true,
-      defaultValue: [],
-    },
-    schedule: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  },
-  {
-    sequelize: sequelizeConnection,
-    tableName: "Class",
-    timestamps: true,
-    charset: "utf8",
-  }
-);
+    {
+      sequelize,
 
-export { Class };
+      modelName: "Class",
+    }
+  );
+  return Class;
+};

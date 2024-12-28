@@ -1,43 +1,90 @@
 import { Request, Response } from "express";
 import { Account } from "../database/models/Account";
-import { ROLE, STATE } from "../database/enum/enum";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { decode_refresh, sign_access, sign_refresh } from "../utils/jwt";
+import { AccountSign } from "../types";
+import { ROLE, STATE } from "../database/enum/enum";
+import { Teacher } from "../database/models/Teacher";
+import { Student } from "../database/models/Student";
 
 async function signup(req: Request, res: Response) {
   try {
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
-      res.status(400).json({ message: "All fields are required." });
+      res
+        .status(400)
+        .json({ message: "Email, password, and role are required." });
     }
 
     if (!validator.isEmail(email)) {
       res.status(400).json({ message: "Invalid email format." });
+      return;
     }
 
+    if (!Object.values(ROLE).includes(role)) {
+      res.status(400).json({
+        message: `Invalid role. Allowed roles are: ${Object.values(ROLE).join(
+          ", "
+        )}`,
+      });
+      return;
+    }
+
+    if (password.length < 8) {
+      res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters long." });
+      return;
+    }
+
+    // Check if user already exists
     const existingUser = await Account.findOne({ where: { email } });
     if (existingUser) {
-      res.status(400).json({ message: "User already exists." });
+      res.status(400).json({ message: "User with this email already exists." });
+      return;
     }
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await Account.create({
+
+    // Create a new account
+    const newAccount = await Account.create({
+      id: uuidv4(),
       email,
       password: hashedPassword,
       role,
-      state: STATE.INACTIVE,
-      id: uuidv4(),
+      state: STATE.LOCKED, // Default to LOCKED state until activation/verification
     });
 
-    res
-      .status(201)
-      .json({ message: "User registered successfully!", user: newUser });
+    if (role === ROLE.TEACHER) {
+      await Teacher.create({
+        id: uuidv4(),
+        accountId: newAccount.id,
+      });
+    } else if (role === ROLE.STUDENT) {
+      await Student.create({
+        id: uuidv4(),
+        accountId: newAccount.id,
+      });
+    }
+
+    res.status(201).json({
+      message: "User registered successfully!",
+      user: {
+        id: newAccount.id,
+        email: newAccount.email,
+        role: newAccount.role,
+        state: newAccount.state,
+      },
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error in signup:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 }
@@ -47,30 +94,44 @@ async function login(req: Request, res: Response) {
     const { email, password } = req.body;
     if (!email || !password) {
       res.status(400).json({ message: "Email, password are required." });
+      return;
     }
 
     if (!validator.isEmail(email)) {
       res.status(400).json({ message: "Invalid email format." });
+      return;
     }
 
     const account = await Account.findOne({ where: { email } });
 
     if (!account) {
       res.status(401).json({ message: "Invalid email or password." });
-      throw new Error("Error");
+      return;
     }
 
     const isMatch = await bcrypt.compare(password, account.password);
 
     if (!isMatch) {
       res.status(401).json({ message: "Invalid email or password." });
+      return;
     }
 
-    const token = jwt.sign(
-      { id: account.id, username: account.username, role: account.role },
-      process.env.SECRET_KEY!,
-      { expiresIn: "1h" }
-    );
+    const secretKey = process.env.SECRET_KEY;
+    if (!secretKey) {
+      console.error("Missing SECRET_KEY in environment");
+      res.status(500).json({ message: "Internal server error." });
+      return;
+    }
+    const accountInfo: AccountSign = {
+      id: account.id,
+      role: account.role,
+    };
+
+    const accessToken = sign_access(accountInfo);
+    const refreshToken = sign_refresh(accountInfo);
+    account.set({
+      token: refreshToken,
+    });
 
     let classList = [];
     if (account.role === ROLE.STUDENT) {
@@ -78,17 +139,25 @@ async function login(req: Request, res: Response) {
     } else if (account.role === ROLE.TEACHER) {
       classList = await getLecturerClassList(account.id);
     }
+    res
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      })
+      .header("authorization", accessToken)
+      .send({
+        message: "Login successfully!",
+        account: account,
+      });
 
-    res.status(200).json({
-      message: "Login successful!",
-      id: account.id,
-      accountname: account.username,
-      token,
-      avatar: account.avatar,
-      active: account.state === STATE.ACTIVE,
-      role: account.role,
-      class_list: classList,
-    });
+    // res.status(200).json({
+    //   message: "Login successful!",
+    //   id: account.id,
+    //   avatar: account.avatar,
+    //   active: account.state === STATE.ACTIVE,
+    //   role: account.role,
+    //   class_list: classList,
+    // });
   } catch (error) {
     console.error("Login error: ", error);
     res.status(500).json({ message: "Server error." });
@@ -99,6 +168,7 @@ async function logout(req: Request, res: Response) {
   const { token } = req.body;
   if (!token) {
     res.status(400).json({ message: "Token is required." });
+    return;
   }
   try {
     res.status(200).json({ message: "Logout successful!" });
@@ -116,6 +186,7 @@ async function get_verify_code(req: Request, res: Response) {
     !email.endsWith("@sis.hust.edu.vn")
   ) {
     res.status(400).json({ message: "Invalid email. Must be a HUST email." });
+    return;
   }
 
   try {
@@ -132,27 +203,22 @@ async function get_verify_code(req: Request, res: Response) {
 async function check_verify_code(req: Request, res: Response) {
   const { email, verificationCode } = req.body;
 
-  // Validate the email and verification code
   if (!email || !verificationCode) {
     res
       .status(400)
       .json({ message: "Email and verification code are required." });
+    return;
   }
 
   try {
-    // Look up the user by email and verify the code
     const user = await Account.findOne({ where: { email, verificationCode } });
 
-    // If user or verification code doesn't match, return an error
     if (!user) {
       res.status(401).json({ message: "Invalid email or verification code." });
-      throw new Error("Error");
+      return;
     }
 
-    // Update user status to active, if applicable, and return user details
-    if (user.state === STATE.INACTIVE) {
-      console.log("first");
-
+    if (user.state === STATE.LOCKED) {
       await Account.update({ state: STATE.ACTIVE }, { where: { email } });
     }
 
@@ -170,49 +236,59 @@ async function changeInfoAfterSignup(req: Request, res: Response) {
   const { token, username, avatar } = req.body;
 
   try {
-    // Validate inputs
     if (!token || !username || !avatar) {
-      return res
+      res
         .status(400)
         .json({ message: "Token, username, and avatar are required." });
+      return;
     }
 
-    // Verify and decode the token to get the user ID
-    const decoded: any = jwt.verify(token, process.env.SECRET_KEY!);
-    const userId = decoded.id;
+    const secretKey = process.env.SECRET_KEY;
+    if (!secretKey) {
+      console.error("Missing SECRET_KEY in environment");
+      res.status(500).json({ message: "Internal server error." });
+      return;
+    }
+    decode_refresh(token);
+    const decoded: any = jwt.verify(token, secretKey);
+    console.log(decoded);
 
-    // Find the user by ID
+    const userId = decoded.id;
+    console.log(userId);
+
     const user = await Account.findOne({ where: { id: userId } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      res.status(404).json({ message: "User not found." });
+      return;
     }
 
-    // Update user info
-    user.username = username;
     user.avatar = avatar;
     await user.save();
 
-    // Respond with the updated user information
-    return res.status(200).json({
+    res.status(200).json({
       message: "Information updated successfully!",
       id: user.id,
-      username: user.username,
       email: user.email,
-      created: user.createdAt,
       avatar: user.avatar,
     });
-  } catch (error) {
-    if (error === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid token." });
+  } catch (error: any) {
+    if (error.name === "JsonWebTokenError") {
+      res.status(401).json({ message: "Invalid token." });
+      return;
+    }
+    if (error.name === "TokenExpiredError") {
+      res.status(401).json({ message: "Token expired." });
+      return;
     }
     console.error("Error updating user information: ", error);
-    return res.status(500).json({ message: "Server error." });
+    res.status(500).json({ message: "Server error." });
+    return;
   }
 }
 
 const getStudentClassList = async (userId: string): Promise<any[]> => {
-  // Replace this with your actual implementation
+  // Replace with actual database call
   return [
     { classId: 1, className: "Math 101" },
     { classId: 2, className: "Science 101" },
@@ -220,7 +296,7 @@ const getStudentClassList = async (userId: string): Promise<any[]> => {
 };
 
 const getLecturerClassList = async (userId: string): Promise<any[]> => {
-  // Replace this with your actual implementation
+  // Replace with actual database call
   return [{ classId: 3, className: "Physics 201" }];
 };
 
@@ -231,13 +307,13 @@ const sendVerificationCode = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "long.tl446@gmail.com",
-      pass: "sdaf gqnf odps aqab",
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
 
   const mailOptions = {
-    from: "long.tl446@gmail.com",
+    from: process.env.EMAIL_USER,
     to: email,
     subject: "Your Verification Code",
     text: `Your verification code is: ${code}`,
@@ -251,28 +327,22 @@ async function auth(req: Request, res: Response) {
     const id = res.locals.id;
     const role = res.locals.role;
     if (!id || !role) {
-      res.status(401);
-      throw new Error("invalid id or role");
+      return res.status(401).json({ message: "Invalid id or role" });
     }
     const account: Account | null = await Account.findOne({
       attributes: { exclude: ["token", "password"] },
       where: { id: id },
     });
     if (!account) {
-      res.status(404);
-      throw new Error("Id does not exist");
+      return res.status(404).json({ message: "Id does not exist" });
     }
     const { password, ...accountWithoutPassword } = account.dataValues;
-    res.status(200).send({
-      account: accountWithoutPassword,
-    });
-  } catch (err: any) {
-    var statusCode = res.statusCode == 200 ? null : res.statusCode;
-    statusCode = statusCode || 404;
-    res.status(statusCode).json({
-      message: "Authentication failed",
-      error: <Error>err.message,
-    });
+    res.status(200).json({ account: accountWithoutPassword });
+  } catch (error: any) {
+    console.error("Authentication error:", error);
+    res
+      .status(500)
+      .json({ message: "Authentication failed", error: error.message });
   }
 }
 
