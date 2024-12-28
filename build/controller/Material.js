@@ -50,7 +50,8 @@ function upload_material(req, res) {
 // Edit material
 function edit_material(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { materialId, title, description, fileUrl } = req.body;
+        const { materialId } = req.params;
+        const { title, description, fileUrl } = req.body;
         if (!materialId) {
             res.status(400).json({ message: "Material ID is required." });
             return;
@@ -79,7 +80,7 @@ function edit_material(req, res) {
 // Delete material
 function delete_material(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { materialId } = req.body;
+        const { materialId } = req.params;
         if (!materialId) {
             res.status(400).json({ message: "Material ID is required." });
             return;
@@ -102,7 +103,7 @@ function delete_material(req, res) {
 // Get material information
 function get_material_info(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { materialId } = req.body;
+        const { materialId } = req.params;
         if (!materialId) {
             res.status(400).json({ message: "Material ID is required." });
             return;
@@ -124,7 +125,7 @@ function get_material_info(req, res) {
 // Get material list for a class
 function get_material_list(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { classId } = req.body;
+        const { classId } = req.params;
         if (!classId) {
             res.status(400).json({ message: "Class ID is required." });
             return;

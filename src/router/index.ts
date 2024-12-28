@@ -7,6 +7,7 @@ import { assignmentRoutes } from "./Assignment";
 import { attendanceRoutes } from "./Attendance";
 import { sessionRoutes } from "./Session";
 import { absenceRequestRoutes } from "./AbsenceRequest";
+import { materialRoutes } from "./Material";
 
 export const router = Router();
 
@@ -18,3 +19,4 @@ router.use("/survey", surveyRouter);
 router.use("/attendance", attendanceRoutes);
 router.use("/session", sessionRoutes);
 router.use("/absence", absenceRequestRoutes);
+router.use("/material", materialRoutes);
