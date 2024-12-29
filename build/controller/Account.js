@@ -43,8 +43,6 @@ function setUserInfo(req, res, next) {
         var _a;
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const { firstName, lastName, avatar } = req.body;
-        console.log(firstName);
-        console.log(lastName);
         try {
             const user = yield Account_1.Account.findOne({ where: { id: userId } });
             if (!user) {

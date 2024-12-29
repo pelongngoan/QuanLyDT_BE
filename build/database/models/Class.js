@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Class = void 0;
 const sequelize_1 = require("sequelize");
 const Teacher_1 = require("./Teacher");
+const enum_1 = require("../enum/enum");
 class Class extends sequelize_1.Model {
     static associate(models) {
         Class.belongsTo(models.Teacher, {
@@ -39,6 +40,10 @@ exports.default = (sequelize) => {
                 key: "id",
             },
             allowNull: false,
+        },
+        status: {
+            type: sequelize_1.DataTypes.ENUM(...Object.values(enum_1.CLASSSTATE)),
+            defaultValue: enum_1.CLASSSTATE.CLOSE,
         },
     }, {
         sequelize,

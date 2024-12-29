@@ -1,20 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.STATE = exports.ROLE = void 0;
-// enum ROLE {
-//   ADMIN = "ADMIN",
-//   STUDENT = "STUDENT",
-//   TEACHER = "TEACHER",
-// }
-// enum STATE {
-//   ACTIVE = "ACTIVE",
-//   INACTIVE = "INACTIVE",
-// }
-// enum ATTENDANCESTATUS {
-//   PRESENT = "PRESENT",
-//   ABSENT = "ABSENT",
-// }
-// export { ROLE, STATE, ATTENDANCESTATUS };
+exports.CLASSSTATE = exports.STATE = exports.ROLE = void 0;
 var ROLE;
 (function (ROLE) {
     ROLE["ADMIN"] = "admin";
@@ -27,3 +13,9 @@ var STATE;
     STATE["LOCKED"] = "locked";
     STATE["PENDING"] = "pending";
 })(STATE || (exports.STATE = STATE = {}));
+var CLASSSTATE;
+(function (CLASSSTATE) {
+    CLASSSTATE["OPEN"] = "active";
+    CLASSSTATE["CLOSE"] = "locked";
+    CLASSSTATE["INPROGRESS"] = "pending";
+})(CLASSSTATE || (exports.CLASSSTATE = CLASSSTATE = {}));

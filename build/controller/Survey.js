@@ -9,15 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.create_survey = create_survey;
-exports.delete_survey = delete_survey;
-exports.edit_survey = edit_survey;
-exports.get_survey_responses = get_survey_responses;
-exports.submit_survey = submit_survey;
+exports.createSurvey = createSurvey;
+exports.deleteSurvey = deleteSurvey;
+exports.editSurvey = editSurvey;
+exports.getSurveyResponses = getSurveyResponses;
+exports.submitSurvey = submitSurvey;
 const Survey_1 = require("../database/models/Survey");
 const SurveyResponse_1 = require("../database/models/SurveyResponse");
 // Create a survey
-function create_survey(req, res) {
+function createSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { title, description, questions } = req.body;
         if (!title || !questions) {
@@ -35,9 +35,10 @@ function create_survey(req, res) {
     });
 }
 // Edit a survey
-function edit_survey(req, res) {
+function editSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { surveyId, title, description, questions } = req.body;
+        const { surveyId } = req.params;
+        const { title, description, questions } = req.body;
         if (!surveyId) {
             res.status(400).json({ message: "Survey ID is required." });
             return;
@@ -58,9 +59,9 @@ function edit_survey(req, res) {
     });
 }
 // Delete a survey
-function delete_survey(req, res) {
+function deleteSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { surveyId } = req.body;
+        const { surveyId } = req.params;
         if (!surveyId) {
             res.status(400).json({ message: "Survey ID is required." });
             return;
@@ -81,7 +82,7 @@ function delete_survey(req, res) {
     });
 }
 // Submit a survey response
-function submit_survey(req, res) {
+function submitSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { surveyId, userId, answers } = req.body;
         if (!surveyId || !userId || !answers) {
@@ -101,9 +102,9 @@ function submit_survey(req, res) {
     });
 }
 // Get survey responses
-function get_survey_responses(req, res) {
+function getSurveyResponses(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { surveyId } = req.body;
+        const { surveyId } = req.params;
         if (!surveyId) {
             res.status(400).json({ message: "Survey ID is required." });
             return;

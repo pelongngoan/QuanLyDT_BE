@@ -28,8 +28,6 @@ async function getUserInfo(req: Request, res: Response, next: NextFunction) {
 async function setUserInfo(req: Request, res: Response, next: NextFunction) {
   const userId = req.user?.id;
   const { firstName, lastName, avatar } = req.body;
-  console.log(firstName);
-  console.log(lastName);
 
   try {
     const user = await Account.findOne({ where: { id: userId } });

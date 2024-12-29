@@ -18,8 +18,6 @@ function authenticate(req, res, next) {
         try {
             const accessToken = (_a = req.headers["authorization"]) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
             const refreshToken = req.cookies["refreshToken"];
-            console.log("accessToken: " + accessToken);
-            console.log("refreshToken: " + refreshToken);
             if (accessToken) {
                 try {
                     const decode = (0, jwt_1.decode_access)(accessToken);
@@ -35,9 +33,7 @@ function authenticate(req, res, next) {
                         return;
                     }
                     try {
-                        console.log("Attempting to decode refresh token...");
                         const decode = (0, jwt_1.decode_refresh)(refreshToken);
-                        console.log(decode);
                         const accountSign = { id: decode.id, role: decode.role };
                         const account = yield Account_1.Account.findOne({
                             where: { id: decode.id },

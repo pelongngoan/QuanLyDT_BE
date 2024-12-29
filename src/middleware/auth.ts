@@ -7,8 +7,6 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const accessToken = req.headers["authorization"]?.split(" ")[1];
     const refreshToken = req.cookies["refreshToken"];
-    console.log("accessToken: " + accessToken);
-    console.log("refreshToken: " + refreshToken);
 
     if (accessToken) {
       try {
@@ -24,11 +22,7 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
           return;
         }
         try {
-          console.log("Attempting to decode refresh token...");
-
           const decode = decode_refresh(refreshToken) as AccountDecode;
-          console.log(decode);
-
           const accountSign: AccountSign = { id: decode.id, role: decode.role };
           const account: Account | null = await Account.findOne({
             where: { id: decode.id },

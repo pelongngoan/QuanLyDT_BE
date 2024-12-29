@@ -15,5 +15,5 @@ classRoutes.post("/create", authenticate, createClass);
 classRoutes.put("/edit/:classId", authenticate, editClass);
 classRoutes.delete("/delete/:classId", authenticate, deleteClass);
 classRoutes.get("/info/:classId", authenticate, getClassInfo);
-classRoutes.get("/list", authenticate, getClassList);
+classRoutes.post("/list", authenticate, getClassList);
 classRoutes.get("/schedule/:classId", authenticate, getClassSchedule);

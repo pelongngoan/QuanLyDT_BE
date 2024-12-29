@@ -8,17 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -26,13 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.signup = signup;
 exports.login = login;
 exports.logout = logout;
-exports.get_verify_code = get_verify_code;
-exports.check_verify_code = check_verify_code;
+exports.getVerifyCode = getVerifyCode;
+exports.checkVerifyCode = checkVerifyCode;
 exports.changeInfoAfterSignup = changeInfoAfterSignup;
-exports.auth = auth;
 const Account_1 = require("../database/models/Account");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const uuid_1 = require("uuid");
 const validator_1 = __importDefault(require("validator"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -43,15 +30,16 @@ const Teacher_1 = require("../database/models/Teacher");
 const Student_1 = require("../database/models/Student");
 function signup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        const { email, password, role } = req.body;
+        if (!email || !password || !role) {
+            res
+                .status(400)
+                .json({ message: "Email, password, and role are required." });
+            return;
+        }
         try {
-            const { email, password, role } = req.body;
-            if (!email || !password || !role) {
-                res
-                    .status(400)
-                    .json({ message: "Email, password, and role are required." });
-            }
-            if (!validator_1.default.isEmail(email)) {
-                res.status(400).json({ message: "Invalid email format." });
+            if (!validator_1.default.isEmail(email) || !email.endsWith("@sis.hust.edu.vn")) {
+                res.status(400).json({ message: "Invalid email. Must be a HUST email." });
                 return;
             }
             if (!Object.values(enum_1.ROLE).includes(role)) {
@@ -110,12 +98,12 @@ function signup(req, res) {
 }
 function login(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            res.status(400).json({ message: "Email, password are required." });
+            return;
+        }
         try {
-            const { email, password } = req.body;
-            if (!email || !password) {
-                res.status(400).json({ message: "Email, password are required." });
-                return;
-            }
             if (!validator_1.default.isEmail(email)) {
                 res.status(400).json({ message: "Invalid email format." });
                 return;
@@ -193,7 +181,7 @@ function logout(req, res) {
         }
     });
 }
-function get_verify_code(req, res) {
+function getVerifyCode(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { email } = req.body;
         if (!email ||
@@ -214,7 +202,7 @@ function get_verify_code(req, res) {
         }
     });
 }
-function check_verify_code(req, res) {
+function checkVerifyCode(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { email, verificationCode } = req.body;
         if (!email || !verificationCode) {
@@ -245,31 +233,25 @@ function check_verify_code(req, res) {
 }
 function changeInfoAfterSignup(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { token, username, avatar } = req.body;
+        const { token, firstName, lastName, avatar } = req.body;
+        if (!token || !firstName || !lastName || !avatar) {
+            res
+                .status(400)
+                .json({ message: "Token, username, and avatar are required." });
+            return;
+        }
         try {
-            if (!token || !username || !avatar) {
-                res
-                    .status(400)
-                    .json({ message: "Token, username, and avatar are required." });
-                return;
-            }
-            const secretKey = process.env.SECRET_KEY;
-            if (!secretKey) {
-                console.error("Missing SECRET_KEY in environment");
-                res.status(500).json({ message: "Internal server error." });
-                return;
-            }
-            (0, jwt_1.decode_refresh)(token);
-            const decoded = jsonwebtoken_1.default.verify(token, secretKey);
-            console.log(decoded);
+            const decoded = (0, jwt_1.decode_refresh)(token);
             const userId = decoded.id;
-            console.log(userId);
             const user = yield Account_1.Account.findOne({ where: { id: userId } });
             if (!user) {
                 res.status(404).json({ message: "User not found." });
                 return;
             }
             user.avatar = avatar;
+            user.firstName = firstName;
+            user.lastName = lastName;
+            user.token = token;
             yield user.save();
             res.status(200).json({
                 message: "Information updated successfully!",
@@ -294,7 +276,6 @@ function changeInfoAfterSignup(req, res) {
     });
 }
 const getStudentClassList = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Replace with actual database call
     return [
         { classId: 1, className: "Math 101" },
         { classId: 2, className: "Science 101" },
@@ -320,29 +301,3 @@ const sendVerificationCode = (email, code) => __awaiter(void 0, void 0, void 0, 
     };
     yield transporter.sendMail(mailOptions);
 });
-function auth(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const id = res.locals.id;
-            const role = res.locals.role;
-            if (!id || !role) {
-                return res.status(401).json({ message: "Invalid id or role" });
-            }
-            const account = yield Account_1.Account.findOne({
-                attributes: { exclude: ["token", "password"] },
-                where: { id: id },
-            });
-            if (!account) {
-                return res.status(404).json({ message: "Id does not exist" });
-            }
-            const _a = account.dataValues, { password } = _a, accountWithoutPassword = __rest(_a, ["password"]);
-            res.status(200).json({ account: accountWithoutPassword });
-        }
-        catch (error) {
-            console.error("Authentication error:", error);
-            res
-                .status(500)
-                .json({ message: "Authentication failed", error: error.message });
-        }
-    });
-}

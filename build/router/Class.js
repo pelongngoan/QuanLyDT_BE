@@ -9,5 +9,5 @@ exports.classRoutes.post("/create", auth_1.authenticate, Class_1.createClass);
 exports.classRoutes.put("/edit/:classId", auth_1.authenticate, Class_1.editClass);
 exports.classRoutes.delete("/delete/:classId", auth_1.authenticate, Class_1.deleteClass);
 exports.classRoutes.get("/info/:classId", auth_1.authenticate, Class_1.getClassInfo);
-exports.classRoutes.get("/list", auth_1.authenticate, Class_1.getClassList);
+exports.classRoutes.post("/list", auth_1.authenticate, Class_1.getClassList);
 exports.classRoutes.get("/schedule/:classId", auth_1.authenticate, Class_1.getClassSchedule);

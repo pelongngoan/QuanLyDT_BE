@@ -7,8 +7,8 @@ const REFRESH_TOKEN_SECRET =
   "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY5Nzk0NzYyNSwiaWF0IjoxNjk3OTQ3NjI1fQ.OzyZEOobmBMnjJfXfKmuGapymsz3qeMJh4dZ16Fn654";
 const ACCESS_TOKEN_SECRET =
   "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY5Nzk0NzYyNSwiaWF0IjoxNjk3OTQ3NjI1fQ.OzyZEOobmBMnjJfXfKmuGapymsz3qeMJh4dZ16Fn654";
-const REFRESH_EXPIRE_TIME = "30 days";
-const ACCESS_EXPIRE_TIME = "1 days";
+const REFRESH_EXPIRE_TIME = "30m";
+const ACCESS_EXPIRE_TIME = "30m";
 
 function sign_refresh(user: AccountSign) {
   return jwt.sign(user, REFRESH_TOKEN_SECRET, {
@@ -30,10 +30,8 @@ function sign_access(user: AccountSign) {
 // }
 
 function decode_refresh(token: string): jwt.JwtPayload | string {
-  console.log("token: " + token);
   try {
     const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET);
-    console.log("verify result: ", decoded);
     return decoded;
   } catch (error) {
     console.error("Token verification failed: ", error);

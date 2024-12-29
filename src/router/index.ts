@@ -10,6 +10,7 @@ import { absenceRequestRoutes } from "./AbsenceRequest";
 import { materialRoutes } from "./Material";
 import { messageRoutes } from "./Message";
 import { notificationRoutes } from "./Notification";
+import { studentRoutes } from "./Student";
 
 export const router = Router();
 
@@ -24,3 +25,4 @@ router.use("/absence", absenceRequestRoutes);
 router.use("/material", materialRoutes);
 router.use("/message", messageRoutes);
 router.use("/notification", notificationRoutes);
+router.use("/student", studentRoutes);

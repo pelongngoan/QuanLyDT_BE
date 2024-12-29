@@ -31,8 +31,8 @@ const jwt = __importStar(require("jsonwebtoken"));
 const JWT_SECRET = "e7a67e013369ba17e622af20aa523d116291245e41ce97d798723e8961118778";
 const REFRESH_TOKEN_SECRET = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY5Nzk0NzYyNSwiaWF0IjoxNjk3OTQ3NjI1fQ.OzyZEOobmBMnjJfXfKmuGapymsz3qeMJh4dZ16Fn654";
 const ACCESS_TOKEN_SECRET = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY5Nzk0NzYyNSwiaWF0IjoxNjk3OTQ3NjI1fQ.OzyZEOobmBMnjJfXfKmuGapymsz3qeMJh4dZ16Fn654";
-const REFRESH_EXPIRE_TIME = "30 days";
-const ACCESS_EXPIRE_TIME = "1 days";
+const REFRESH_EXPIRE_TIME = "30m";
+const ACCESS_EXPIRE_TIME = "30m";
 function sign_refresh(user) {
     return jwt.sign(user, REFRESH_TOKEN_SECRET, {
         expiresIn: REFRESH_EXPIRE_TIME,
@@ -49,10 +49,8 @@ function sign_access(user) {
 //   return jwt.verify(token, REFRESH_TOKEN_SECRET);
 // }
 function decode_refresh(token) {
-    console.log("token: " + token);
     try {
         const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET);
-        console.log("verify result: ", decoded);
         return decoded;
     }
     catch (error) {

@@ -1,6 +1,7 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
 import { Teacher } from "./Teacher";
 import { sequelizeConnection } from "../db";
+import { CLASSSTATE } from "../enum/enum";
 
 export class Class extends Model {
   declare id: string;
@@ -10,6 +11,7 @@ export class Class extends Model {
   declare startDate: Date;
   declare endDate: Date;
   declare teacherId: string;
+  declare status: CLASSSTATE;
 
   static associate(models: any) {
     Class.belongsTo(models.Teacher, {
@@ -47,6 +49,10 @@ export default (sequelize: Sequelize) => {
           key: "id",
         },
         allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM(...Object.values(CLASSSTATE)),
+        defaultValue: CLASSSTATE.CLOSE,
       },
     },
     {

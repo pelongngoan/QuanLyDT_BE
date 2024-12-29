@@ -13,17 +13,17 @@ import { Teacher } from "../database/models/Teacher";
 import { Student } from "../database/models/Student";
 
 async function signup(req: Request, res: Response) {
+  const { email, password, role } = req.body;
+
+  if (!email || !password || !role) {
+    res
+      .status(400)
+      .json({ message: "Email, password, and role are required." });
+    return;
+  }
   try {
-    const { email, password, role } = req.body;
-
-    if (!email || !password || !role) {
-      res
-        .status(400)
-        .json({ message: "Email, password, and role are required." });
-    }
-
-    if (!validator.isEmail(email)) {
-      res.status(400).json({ message: "Invalid email format." });
+    if (!validator.isEmail(email) || !email.endsWith("@sis.hust.edu.vn")) {
+      res.status(400).json({ message: "Invalid email. Must be a HUST email." });
       return;
     }
 
@@ -87,13 +87,12 @@ async function signup(req: Request, res: Response) {
 }
 
 async function login(req: Request, res: Response) {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.status(400).json({ message: "Email, password are required." });
+    return;
+  }
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ message: "Email, password are required." });
-      return;
-    }
-
     if (!validator.isEmail(email)) {
       res.status(400).json({ message: "Invalid email format." });
       return;
@@ -175,7 +174,7 @@ async function logout(req: Request, res: Response) {
   }
 }
 
-async function get_verify_code(req: Request, res: Response) {
+async function getVerifyCode(req: Request, res: Response) {
   const { email } = req.body;
   if (
     !email ||
@@ -197,7 +196,7 @@ async function get_verify_code(req: Request, res: Response) {
   }
 }
 
-async function check_verify_code(req: Request, res: Response) {
+async function checkVerifyCode(req: Request, res: Response) {
   const { email, verificationCode } = req.body;
 
   if (!email || !verificationCode) {
@@ -230,37 +229,26 @@ async function check_verify_code(req: Request, res: Response) {
 }
 
 async function changeInfoAfterSignup(req: Request, res: Response) {
-  const { token, username, avatar } = req.body;
+  const { token, firstName, lastName, avatar } = req.body;
 
+  if (!token || !firstName || !lastName || !avatar) {
+    res
+      .status(400)
+      .json({ message: "Token, username, and avatar are required." });
+    return;
+  }
   try {
-    if (!token || !username || !avatar) {
-      res
-        .status(400)
-        .json({ message: "Token, username, and avatar are required." });
-      return;
-    }
-
-    const secretKey = process.env.SECRET_KEY;
-    if (!secretKey) {
-      console.error("Missing SECRET_KEY in environment");
-      res.status(500).json({ message: "Internal server error." });
-      return;
-    }
-    decode_refresh(token);
-    const decoded: any = jwt.verify(token, secretKey);
-    console.log(decoded);
-
+    const decoded: any = decode_refresh(token);
     const userId = decoded.id;
-    console.log(userId);
-
     const user = await Account.findOne({ where: { id: userId } });
-
     if (!user) {
       res.status(404).json({ message: "User not found." });
       return;
     }
-
     user.avatar = avatar;
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.token = token;
     await user.save();
 
     res.status(200).json({
@@ -285,7 +273,6 @@ async function changeInfoAfterSignup(req: Request, res: Response) {
 }
 
 const getStudentClassList = async (userId: string): Promise<any[]> => {
-  // Replace with actual database call
   return [
     { classId: 1, className: "Math 101" },
     { classId: 2, className: "Science 101" },
@@ -319,36 +306,35 @@ const sendVerificationCode = async (
   await transporter.sendMail(mailOptions);
 };
 
-async function auth(req: Request, res: Response) {
-  try {
-    const id = res.locals.id;
-    const role = res.locals.role;
-    if (!id || !role) {
-      return res.status(401).json({ message: "Invalid id or role" });
-    }
-    const account: Account | null = await Account.findOne({
-      attributes: { exclude: ["token", "password"] },
-      where: { id: id },
-    });
-    if (!account) {
-      return res.status(404).json({ message: "Id does not exist" });
-    }
-    const { password, ...accountWithoutPassword } = account.dataValues;
-    res.status(200).json({ account: accountWithoutPassword });
-  } catch (error: any) {
-    console.error("Authentication error:", error);
-    res
-      .status(500)
-      .json({ message: "Authentication failed", error: error.message });
-  }
-}
+// async function auth(req: Request, res: Response) {
+//   try {
+//     const id = res.locals.id;
+//     const role = res.locals.role;
+//     if (!id || !role) {
+//       return res.status(401).json({ message: "Invalid id or role" });
+//     }
+//     const account: Account | null = await Account.findOne({
+//       attributes: { exclude: ["token", "password"] },
+//       where: { id: id },
+//     });
+//     if (!account) {
+//       return res.status(404).json({ message: "Id does not exist" });
+//     }
+//     const { password, ...accountWithoutPassword } = account.dataValues;
+//     res.status(200).json({ account: accountWithoutPassword });
+//   } catch (error: any) {
+//     console.error("Authentication error:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Authentication failed", error: error.message });
+//   }
+// }
 
 export {
   signup,
   login,
   logout,
-  get_verify_code,
-  check_verify_code,
+  getVerifyCode,
+  checkVerifyCode,
   changeInfoAfterSignup,
-  auth,
 };

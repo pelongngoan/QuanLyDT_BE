@@ -1,17 +1,3 @@
-// enum ROLE {
-//   ADMIN = "ADMIN",
-//   STUDENT = "STUDENT",
-//   TEACHER = "TEACHER",
-// }
-// enum STATE {
-//   ACTIVE = "ACTIVE",
-//   INACTIVE = "INACTIVE",
-// }
-// enum ATTENDANCESTATUS {
-//   PRESENT = "PRESENT",
-//   ABSENT = "ABSENT",
-// }
-// export { ROLE, STATE, ATTENDANCESTATUS };
 export enum ROLE {
   ADMIN = "admin",
   TEACHER = "teacher",
@@ -22,4 +8,9 @@ export enum STATE {
   ACTIVE = "active",
   LOCKED = "locked",
   PENDING = "pending",
+}
+export enum CLASSSTATE {
+  OPEN = "active",
+  CLOSE = "locked",
+  INPROGRESS = "pending",
 }
