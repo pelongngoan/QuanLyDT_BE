@@ -42,7 +42,6 @@ async function signup(req: Request, res: Response) {
         .json({ message: "Password must be at least 8 characters long." });
       return;
     }
-
     // Check if user already exists
     const existingUser = await Account.findOne({ where: { email } });
     if (existingUser) {
@@ -50,16 +49,14 @@ async function signup(req: Request, res: Response) {
       return;
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new account
     const newAccount = await Account.create({
       id: uuidv4(),
       email,
       password: hashedPassword,
       role,
-      state: STATE.LOCKED, // Default to LOCKED state until activation/verification
+      state: STATE.LOCKED,
     });
 
     if (role === ROLE.TEACHER) {

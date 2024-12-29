@@ -8,6 +8,8 @@ import { attendanceRoutes } from "./Attendance";
 import { sessionRoutes } from "./Session";
 import { absenceRequestRoutes } from "./AbsenceRequest";
 import { materialRoutes } from "./Material";
+import { messageRoutes } from "./Message";
+import { notificationRoutes } from "./Notification";
 
 export const router = Router();
 
@@ -20,3 +22,5 @@ router.use("/attendance", attendanceRoutes);
 router.use("/session", sessionRoutes);
 router.use("/absence", absenceRequestRoutes);
 router.use("/material", materialRoutes);
+router.use("/message", messageRoutes);
+router.use("/notification", notificationRoutes);

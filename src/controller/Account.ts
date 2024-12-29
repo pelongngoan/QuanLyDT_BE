@@ -7,11 +7,8 @@ import { ROLE, STATE } from "../database/enum/enum";
 
 async function getUserInfo(req: Request, res: Response, next: NextFunction) {
   const userId = req.params.id;
-  console.log("alo:" + req.params.id);
 
   try {
-    console.log(userId);
-
     const user = await Account.findOne({
       where: { id: userId },
       // include: [Notification, Message],

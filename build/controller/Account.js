@@ -21,9 +21,7 @@ const enum_1 = require("../database/enum/enum");
 function getUserInfo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = req.params.id;
-        console.log("alo:" + req.params.id);
         try {
-            console.log(userId);
             const user = yield Account_1.Account.findOne({
                 where: { id: userId },
                 // include: [Notification, Message],

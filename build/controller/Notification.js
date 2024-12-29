@@ -9,51 +9,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.send_notification = send_notification;
-exports.get_notifications = get_notifications;
-exports.mark_notification_as_read = mark_notification_as_read;
-exports.get_conversation = get_conversation;
-exports.get_list_conversation = get_list_conversation;
-exports.delete_message = delete_message;
-const sequelize_1 = require("sequelize"); // Import Op
+exports.sendNotification = sendNotification;
+exports.getNotifications = getNotifications;
+exports.markMotificationAsRead = markMotificationAsRead;
 const Notification_1 = require("../database/models/Notification");
-const db_1 = require("../database/db");
-const Message_1 = require("../database/models/Message");
-function send_notification(req, res) {
+function sendNotification(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { userIds, title, message } = req.body;
-        if (!userIds || !title || !message) {
-            res.status(400).json({ message: "Missing required fields." });
+        const { message, type, userId } = req.body;
+        if (!message || !userId) {
+            res.status(400).json({ message: "Message and userId are required." });
             return;
         }
         try {
-            const notifications = userIds.map((userId) => ({
-                userId,
-                title,
+            const notification = yield Notification_1.Notification.create({
                 message,
-                isRead: false,
-            }));
-            yield Notification_1.Notification.bulkCreate(notifications);
-            res.status(201).json({ message: "Notifications sent successfully." });
+                type,
+                userId,
+            });
+            res
+                .status(201)
+                .json({ message: "Notification sent successfully.", notification });
         }
         catch (error) {
-            console.error("Error sending notifications:", error);
+            console.error("Error sending notification:", error);
             res.status(500).json({ message: "Internal server error." });
         }
     });
 }
-function get_notifications(req, res) {
+function getNotifications(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { userId } = req.body;
+        const { userId } = req.params;
         if (!userId) {
             res.status(400).json({ message: "User ID is required." });
             return;
         }
         try {
-            const notifications = yield Notification_1.Notification.findAll({
-                where: { userId },
-                order: [["createdAt", "DESC"]],
-            });
+            const notifications = yield Notification_1.Notification.findAll({ where: { userId } });
             res.status(200).json({ notifications });
         }
         catch (error) {
@@ -62,9 +53,9 @@ function get_notifications(req, res) {
         }
     });
 }
-function mark_notification_as_read(req, res) {
+function markMotificationAsRead(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { notificationId } = req.body;
+        const { notificationId } = req.params;
         if (!notificationId) {
             res.status(400).json({ message: "Notification ID is required." });
             return;
@@ -76,82 +67,12 @@ function mark_notification_as_read(req, res) {
                 return;
             }
             yield notification.update({ isRead: true });
-            res.status(200).json({ message: "Notification marked as read." });
+            res
+                .status(200)
+                .json({ message: "Notification marked as read.", notification });
         }
         catch (error) {
             console.error("Error marking notification as read:", error);
-            res.status(500).json({ message: "Internal server error." });
-        }
-    });
-}
-function get_conversation(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { userId, otherUserId } = req.body;
-        if (!userId || !otherUserId) {
-            res.status(400).json({ message: "User IDs are required." });
-            return;
-        }
-        try {
-            const messages = yield Message_1.Message.findAll({
-                where: {
-                    [sequelize_1.Op.or]: [
-                        { senderId: userId, receiverId: otherUserId },
-                        { senderId: otherUserId, receiverId: userId },
-                    ],
-                },
-                order: [["createdAt", "ASC"]],
-            });
-            res.status(200).json({ messages });
-        }
-        catch (error) {
-            console.error("Error fetching conversation:", error);
-            res.status(500).json({ message: "Internal server error." });
-        }
-    });
-}
-function get_list_conversation(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { userId } = req.body;
-        if (!userId) {
-            res.status(400).json({ message: "User ID is required." });
-            return;
-        }
-        try {
-            const conversations = yield Message_1.Message.findAll({
-                where: { [sequelize_1.Op.or]: [{ senderId: userId }, { receiverId: userId }] },
-                attributes: [
-                    [
-                        db_1.sequelizeConnection.fn("DISTINCT", db_1.sequelizeConnection.col("receiverId")),
-                        "otherUserId",
-                    ],
-                ],
-            });
-            res.status(200).json({ conversations });
-        }
-        catch (error) {
-            console.error("Error fetching conversations:", error);
-            res.status(500).json({ message: "Internal server error." });
-        }
-    });
-}
-function delete_message(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { messageId } = req.body;
-        if (!messageId) {
-            res.status(400).json({ message: "Message ID is required." });
-            return;
-        }
-        try {
-            const message = yield Message_1.Message.findByPk(messageId);
-            if (!message) {
-                res.status(404).json({ message: "Message not found." });
-                return;
-            }
-            yield message.destroy();
-            res.status(200).json({ message: "Message deleted successfully." });
-        }
-        catch (error) {
-            console.error("Error deleting message:", error);
             res.status(500).json({ message: "Internal server error." });
         }
     });

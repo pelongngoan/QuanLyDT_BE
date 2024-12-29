@@ -72,15 +72,13 @@ function signup(req, res) {
                 res.status(400).json({ message: "User with this email already exists." });
                 return;
             }
-            // Hash password
             const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
-            // Create a new account
             const newAccount = yield Account_1.Account.create({
                 id: (0, uuid_1.v4)(),
                 email,
                 password: hashedPassword,
                 role,
-                state: enum_1.STATE.LOCKED, // Default to LOCKED state until activation/verification
+                state: enum_1.STATE.LOCKED,
             });
             if (role === enum_1.ROLE.TEACHER) {
                 yield Teacher_1.Teacher.create({
