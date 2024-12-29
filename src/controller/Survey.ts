@@ -3,7 +3,7 @@ import { Survey } from "../database/models/Survey";
 import { SurveyResponse } from "../database/models/SurveyResponse";
 
 // Create a survey
-async function create_survey(req: Request, res: Response) {
+async function createSurvey(req: Request, res: Response) {
   const { title, description, questions } = req.body;
 
   if (!title || !questions) {
@@ -21,8 +21,9 @@ async function create_survey(req: Request, res: Response) {
 }
 
 // Edit a survey
-async function edit_survey(req: Request, res: Response) {
-  const { surveyId, title, description, questions } = req.body;
+async function editSurvey(req: Request, res: Response) {
+  const { surveyId } = req.params;
+  const { title, description, questions } = req.body;
 
   if (!surveyId) {
     res.status(400).json({ message: "Survey ID is required." });
@@ -45,8 +46,8 @@ async function edit_survey(req: Request, res: Response) {
 }
 
 // Delete a survey
-async function delete_survey(req: Request, res: Response) {
-  const { surveyId } = req.body;
+async function deleteSurvey(req: Request, res: Response) {
+  const { surveyId } = req.params;
 
   if (!surveyId) {
     res.status(400).json({ message: "Survey ID is required." });
@@ -69,7 +70,7 @@ async function delete_survey(req: Request, res: Response) {
 }
 
 // Submit a survey response
-async function submit_survey(req: Request, res: Response) {
+async function submitSurvey(req: Request, res: Response) {
   const { surveyId, userId, answers } = req.body;
 
   if (!surveyId || !userId || !answers) {
@@ -89,8 +90,8 @@ async function submit_survey(req: Request, res: Response) {
 }
 
 // Get survey responses
-async function get_survey_responses(req: Request, res: Response) {
-  const { surveyId } = req.body;
+async function getSurveyResponses(req: Request, res: Response) {
+  const { surveyId } = req.params;
 
   if (!surveyId) {
     res.status(400).json({ message: "Survey ID is required." });
@@ -110,9 +111,9 @@ async function get_survey_responses(req: Request, res: Response) {
   }
 }
 export {
-  create_survey,
-  delete_survey,
-  edit_survey,
-  get_survey_responses,
-  submit_survey,
+  createSurvey,
+  deleteSurvey,
+  editSurvey,
+  getSurveyResponses,
+  submitSurvey,
 };
