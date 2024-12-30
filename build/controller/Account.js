@@ -8,7 +8,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.changePassword = changePassword;
 exports.getUserInfo = getUserInfo;
 exports.setUserInfo = setUserInfo;
 exports.getUserClasses = getUserClasses;
@@ -18,6 +22,7 @@ exports.reactivateUser = reactivateUser;
 const Account_1 = require("../database/models/Account");
 const Class_1 = require("../database/models/Class");
 const enum_1 = require("../database/enum/enum");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 function getUserInfo(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = req.params.id;
@@ -151,6 +156,42 @@ function reactivateUser(req, res, next) {
             }
             yield user.update({ state: enum_1.STATE.ACTIVE });
             res.status(200).json({ message: "User reactivated successfully!" });
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+// Change user password
+function changePassword(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const { oldPassword, newPassword } = req.body;
+        if (!oldPassword || !newPassword) {
+            res.status(400).json({ message: "Old and new passwords are required." });
+            return;
+        }
+        try {
+            const user = yield Account_1.Account.findOne({ where: { id: userId } });
+            if (!user) {
+                res.status(404).json({ message: "User not found." });
+                return;
+            }
+            const isMatch = yield bcryptjs_1.default.compare(oldPassword, user.password);
+            if (!isMatch) {
+                res.status(400).json({ message: "Incorrect old password." });
+                return;
+            }
+            if (oldPassword === newPassword) {
+                res.status(400).json({
+                    message: "New password must be different from the old password.",
+                });
+                return;
+            }
+            const hashedPassword = yield bcryptjs_1.default.hash(newPassword, 10);
+            yield user.update({ password: hashedPassword });
+            res.status(200).json({ message: "Password changed successfully!" });
         }
         catch (error) {
             next(error);

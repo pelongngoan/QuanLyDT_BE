@@ -4,15 +4,15 @@ import { SurveyResponse } from "../database/models/SurveyResponse";
 
 // Create a survey
 async function createSurvey(req: Request, res: Response) {
-  const { title, description, questions } = req.body;
+  const { title, description, classId } = req.body;
 
-  if (!title || !questions) {
+  if (!title || !classId) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
-    const survey = await Survey.create({ title, description, questions });
+    const survey = await Survey.create({ title, description, classId });
     res.status(201).json({ message: "Survey created successfully.", survey });
   } catch (error) {
     console.error("Error creating survey:", error);
@@ -23,7 +23,7 @@ async function createSurvey(req: Request, res: Response) {
 // Edit a survey
 async function editSurvey(req: Request, res: Response) {
   const { surveyId } = req.params;
-  const { title, description, questions } = req.body;
+  const { title, description } = req.body;
 
   if (!surveyId) {
     res.status(400).json({ message: "Survey ID is required." });
@@ -37,7 +37,7 @@ async function editSurvey(req: Request, res: Response) {
       return;
     }
 
-    await survey.update({ title, description, questions });
+    await survey.update({ title, description });
     res.status(200).json({ message: "Survey updated successfully.", survey });
   } catch (error) {
     console.error("Error updating survey:", error);
@@ -71,18 +71,22 @@ async function deleteSurvey(req: Request, res: Response) {
 
 // Submit a survey response
 async function submitSurvey(req: Request, res: Response) {
-  const { surveyId, userId, answers } = req.body;
+  const { surveyId, studentId, response } = req.body;
 
-  if (!surveyId || !userId || !answers) {
+  if (!surveyId || !studentId || !response) {
     res.status(400).json({ message: "Missing required fields." });
     return;
   }
 
   try {
-    const response = await SurveyResponse.create({ surveyId, userId, answers });
+    const responses = await SurveyResponse.create({
+      surveyId,
+      studentId,
+      response,
+    });
     res
       .status(201)
-      .json({ message: "Survey response submitted successfully.", response });
+      .json({ message: "Survey response submitted successfully.", responses });
   } catch (error) {
     console.error("Error submitting survey response:", error);
     res.status(500).json({ message: "Internal server error." });
@@ -100,8 +104,8 @@ async function getSurveyResponses(req: Request, res: Response) {
 
   try {
     const responses = await SurveyResponse.findAll({
-      where: { surveyId },
-      include: [Survey], // Include Survey details if needed
+      where: { surveyId: surveyId },
+      // include: [Survey], // Include Survey details if needed
     });
 
     res.status(200).json({ responses });

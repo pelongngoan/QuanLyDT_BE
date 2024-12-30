@@ -7,6 +7,7 @@ export class Schedule extends Model {
   declare dayOfWeek: number;
   declare startTime: string;
   declare endTime: string;
+  declare location: string;
 
   static associate(models: any) {
     Schedule.belongsTo(models.Class, {
@@ -35,6 +36,7 @@ export default (sequelize: Sequelize) => {
       dayOfWeek: { type: DataTypes.INTEGER, allowNull: false }, // 0 for Sunday, 6 for Saturday
       startTime: { type: DataTypes.TIME, allowNull: false },
       endTime: { type: DataTypes.TIME, allowNull: false },
+      location: { type: DataTypes.STRING(45), allowNull: false },
     },
     {
       sequelize,

@@ -19,13 +19,13 @@ const SurveyResponse_1 = require("../database/models/SurveyResponse");
 // Create a survey
 function createSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { title, description, questions } = req.body;
-        if (!title || !questions) {
+        const { title, description, classId } = req.body;
+        if (!title || !classId) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
-            const survey = yield Survey_1.Survey.create({ title, description, questions });
+            const survey = yield Survey_1.Survey.create({ title, description, classId });
             res.status(201).json({ message: "Survey created successfully.", survey });
         }
         catch (error) {
@@ -38,7 +38,7 @@ function createSurvey(req, res) {
 function editSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { surveyId } = req.params;
-        const { title, description, questions } = req.body;
+        const { title, description } = req.body;
         if (!surveyId) {
             res.status(400).json({ message: "Survey ID is required." });
             return;
@@ -49,7 +49,7 @@ function editSurvey(req, res) {
                 res.status(404).json({ message: "Survey not found." });
                 return;
             }
-            yield survey.update({ title, description, questions });
+            yield survey.update({ title, description });
             res.status(200).json({ message: "Survey updated successfully.", survey });
         }
         catch (error) {
@@ -84,16 +84,20 @@ function deleteSurvey(req, res) {
 // Submit a survey response
 function submitSurvey(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { surveyId, userId, answers } = req.body;
-        if (!surveyId || !userId || !answers) {
+        const { surveyId, studentId, response } = req.body;
+        if (!surveyId || !studentId || !response) {
             res.status(400).json({ message: "Missing required fields." });
             return;
         }
         try {
-            const response = yield SurveyResponse_1.SurveyResponse.create({ surveyId, userId, answers });
+            const responses = yield SurveyResponse_1.SurveyResponse.create({
+                surveyId,
+                studentId,
+                response,
+            });
             res
                 .status(201)
-                .json({ message: "Survey response submitted successfully.", response });
+                .json({ message: "Survey response submitted successfully.", responses });
         }
         catch (error) {
             console.error("Error submitting survey response:", error);
@@ -111,8 +115,8 @@ function getSurveyResponses(req, res) {
         }
         try {
             const responses = yield SurveyResponse_1.SurveyResponse.findAll({
-                where: { surveyId },
-                include: [Survey_1.Survey], // Include Survey details if needed
+                where: { surveyId: surveyId },
+                // include: [Survey], // Include Survey details if needed
             });
             res.status(200).json({ responses });
         }

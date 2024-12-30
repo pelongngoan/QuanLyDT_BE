@@ -6,6 +6,7 @@ import {
   reactivateUser,
   setUserInfo,
   setUserRole,
+  changePassword,
 } from "../controller/Account";
 import { authenticate } from "../middleware/auth";
 
@@ -17,3 +18,4 @@ accountRoutes.put("/deactivate_user", authenticate, deactivateUser);
 accountRoutes.put("/reactivate_user", authenticate, reactivateUser);
 accountRoutes.put("/set_user_info", authenticate, setUserInfo);
 accountRoutes.put("/set_user_role", authenticate, setUserRole);
+accountRoutes.put("/changePassword", authenticate, changePassword);

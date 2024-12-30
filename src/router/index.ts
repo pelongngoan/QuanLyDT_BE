@@ -11,6 +11,7 @@ import { materialRoutes } from "./Material";
 import { messageRoutes } from "./Message";
 import { notificationRoutes } from "./Notification";
 import { studentRoutes } from "./Student";
+import { scheduleRoutes } from "./Schedule";
 
 export const router = Router();
 
@@ -26,3 +27,4 @@ router.use("/material", materialRoutes);
 router.use("/message", messageRoutes);
 router.use("/notification", notificationRoutes);
 router.use("/student", studentRoutes);
+router.use("/schedule", scheduleRoutes);

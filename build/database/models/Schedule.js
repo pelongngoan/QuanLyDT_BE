@@ -30,6 +30,7 @@ exports.default = (sequelize) => {
         dayOfWeek: { type: sequelize_1.DataTypes.INTEGER, allowNull: false }, // 0 for Sunday, 6 for Saturday
         startTime: { type: sequelize_1.DataTypes.TIME, allowNull: false },
         endTime: { type: sequelize_1.DataTypes.TIME, allowNull: false },
+        location: { type: sequelize_1.DataTypes.STRING(45), allowNull: false },
     }, {
         sequelize,
         modelName: "Schedule",

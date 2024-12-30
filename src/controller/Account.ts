@@ -4,6 +4,7 @@ import { Class } from "../database/models/Class";
 import { Notification } from "../database/models/Notification";
 import { Message } from "../database/models/Message";
 import { ROLE, STATE } from "../database/enum/enum";
+import bcrypt from "bcryptjs";
 
 async function getUserInfo(req: Request, res: Response, next: NextFunction) {
   const userId = req.params.id;
@@ -142,7 +143,44 @@ async function reactivateUser(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+// Change user password
+async function changePassword(req: Request, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    res.status(400).json({ message: "Old and new passwords are required." });
+    return;
+  }
+
+  try {
+    const user = await Account.findOne({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      res.status(400).json({ message: "Incorrect old password." });
+      return;
+    }
+    if (oldPassword === newPassword) {
+      res.status(400).json({
+        message: "New password must be different from the old password.",
+      });
+      return;
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await user.update({ password: hashedPassword });
+
+    res.status(200).json({ message: "Password changed successfully!" });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export {
+  changePassword,
   getUserInfo,
   setUserInfo,
   getUserClasses,

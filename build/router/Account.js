@@ -11,3 +11,4 @@ exports.accountRoutes.put("/deactivate_user", auth_1.authenticate, Account_1.dea
 exports.accountRoutes.put("/reactivate_user", auth_1.authenticate, Account_1.reactivateUser);
 exports.accountRoutes.put("/set_user_info", auth_1.authenticate, Account_1.setUserInfo);
 exports.accountRoutes.put("/set_user_role", auth_1.authenticate, Account_1.setUserRole);
+exports.accountRoutes.put("/changePassword", auth_1.authenticate, Account_1.changePassword);
